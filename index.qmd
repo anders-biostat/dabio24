@@ -9,4 +9,8 @@ Wintersemester 2024/25
 ## Inhalt
 
 - [Einleitung](einleitung.html)
-- [Erste Schritte mit R](erste_schritte.html)
+  - ein Beispiel für eine typische Datenanalyse
+- [Erste Schritte mit R, Teil I](erste_schritte.html)
+  - Bedienung von RStudio
+  - Arithmetik
+  - Turtle-Grafik

@@ -1,1 +1,203 @@
-# Erste Scritte mit R
+# Erste Schritte mit R, Teil 1
+
+## Vorbereitung
+
+### Was ist R?
+
+- R ist eine "statistische Programmier-Umgebung".
+
+- Andere solche Werzeuge sind z.B. SAS und SPSS.
+
+- In der Biologie wird meist R verwendet, in der Medizin gerne SAS, in anderen Fächern SPSS.
+
+- R is kostenlos und "open source".
+
+- Es gibt eine Vielzahl von Erweiterungspaketen ("packages"), die spezielle Funktionalitäten
+  bereit stellen
+
+- Zum bequemen Arbeiten gibt es eine "Arbeits-Umgebung", genannt "RStudio".
+
+### Installation von R
+
+Um die Übungen in diesem Kurs machen zu können, installieren Sie bitte auf Ihrem Laptop:
+
+- R, erhältlich auf [CRAN](https://cran.r-project.org/), und
+- die kostenlose Version von RStudio Desktop, erhältlich [hier](https://posit.co/download/rstudio-desktop/)
+
+Sie brauchen keinen leistungsfähigen Rechner; auch ein 10 Jahre alter Laptop genügt meist. 
+
+### RStudio Server
+
+Anstatt RStudio und R lokal auf dem eigenen Rechner zu installieren, kann man auch beides zentral auf einem Server
+installieren. Mehrere Benutzer können dann die Installation gemeinsam nutzen, in dem Sie über einen Webbrowser
+darauf zugreifen. Dabei hat jeder Benutzer seinen eigenen Bereich.
+
+Für die Vorlesung habe ich einen RStudio-Server hier eingerichtet, den ich bei Bedarf hochfahre:
+
+<a href="https://dabio.ddns.net"><tt><span style="color:gray">https://</span><b><u>dabio.ddns.net</u></b></tt></a>
+
+Loggen Sie sich mit einem Usernamen ein. Diese lauten `stud00` bis `stud99`.
+
+## Erste Schritte
+
+## RStudio-Konsole
+
+Das RStudio-Fenster ist in 4 Teilfenster ("Panes") eingeteilt. (Anfangs sind nur 3 sichtbar.) 
+Zunächst nutzen wir das Teilfenster "Console".
+Wenn man hier eine Anweisung eintippt und die Enter-Taste (beschriftet mit ``⏎'') drückt,
+führt R diesen aus und schreibt das Ergebnis darunter.
+
+## Einfache Arithmetik
+
+Tippen Sie eine einfache Mathe-Aufgabe ein. Fragen Sie R z.B., was $1+1$ ergibt, indem
+Sie die Konsole anklicken, `1+1` eintippen, und dann Enter drücken. R antwortet mit `2`.
+
+```{r}
+1+1
+```
+
+Versuchen Sie einige weitere mathematischen Ausdrücke. 
+
+<div class="imp">
+Die Grundrechenarten stellt man wie folgt dar:
+
+- Plus und Minus wird, wie üblich, mit `+` und `-` geschrieben.
+- Die Multiplikation wird durch einen Stern (`*`) ausgedrückt, z.B. `2*3`.
+- Die Division schreibt man mit einem Schrägstrich (engl. *slash*): `20/4`.
+- Es gilt, wie in der Schule, "Punkt vor Strich". Wenn man eine andere 
+  Reihenfolge möchte, setzt man Klammern. Dies müssen stets *runde* Klammern
+  sein (also `(` und `)`, nicht `[` oder `]`).
+- Für Potenzen schreibt man `^`, also z.B. `3^2` für das Quadrat von 3.
+- Komma-Zahlen schreibt man mit Punkt (`.`), z.B.  `1.5` für eineinhalb
+</div>
+
+Übung: Lassen Sie R für sich rechnen: 
+- Was ist 123 mal 17? 
+- 10 geteilt durch 7?
+- 4 zur dritten Potenz?
+- 2¾ minus 10?
+- Was ist das dreifache der Summe aus 10 und 5?
+
+Es gibt auch eine Vielzahl von Funktionen, z.B.:
+
+<div class="imp">
+- `sqrt` bedeutet "square root", d.h., Quadratwurzel. Für $\sqrt{2}$ schreibt man `sqrt(2)`.
+- `round(x,n)` bedeutet: Runde die Zahl `x` auf zwei Nachkommastellen.
+</div>
+
+Aufgabe: 
+
+- Was ist die Quadratwurzel von 3?
+- Runden Sie $\sqrt{3}$ auf 4 Nachkommastellen
+
+## TurtleGraphic
+
+["Turtle Graphics"](https://en.wikipedia.org/wiki/Turtle_graphics) ist eine Idee aus den
+60er-Jahren, um Kindern spielerisch das Programmieren näher zu bringen.
+
+Wir probieren das aus.
+
+Dazu gibt es ein Erweiterungs-Paket zu R namens `TurtleGraphics`.
+
+Mit
+```r
+install.packages("TurtleGraphics")
+```
+können Sie R anweisen, das Paket herunter zu laden und zu installieren. 
+
+Dann laden Sie das Paket mit
+```{r}
+library( TurtleGraphics )
+```
+
+<div class="imp">"Pakete" erweitern die Funktionalität von R. Um ein Paket, z.B. mit dem
+Namen "foo", zu laden, gibt man die Anweisung: `library(foo)`. 
+
+Wenn R neu gestartet ist, sind noch keine Pakete geladen. Man muss also nach jedem 
+Neustart von R die benötigten Pakete erst mit `library` laden.
+
+Die Anweisung `install.packages("foo")` (mit Anführungszeichen!) weist R an, das Paket
+von der Webseite CRAN (eine zentrales "Repository" für R-Pakete) herunter zu laden und zu
+installieren.
+
+Die Installation mit `install.packages` müssen Sie nur einmal durchführen,
+bevor Sie das Paket zum ersten mal verwenden. Das Laden des Pakets mit `library` ist jedes Mal
+erforderlich, nachdem Sie R neu gestartet haben.</div>
+
+Wenn Sie `turtle_init()` eingeben (mit den Klammern!), erscheint im Teilfenster "Plots" eine kleine
+Schildkröte:
+```{r}
+turtle_init()
+```
+
+Dieser können Sie nun Anweisungen geben, z.B. "Gehe 20 Schritte vorwärts, drehe 
+dich dann um 90 Grad nach recht, gehe dann nochmals 10 Schritte vorwärts."
+
+```r
+turtle_forward(20)
+turtle_right(90)
+turtle_forward(10)
+```
+
+Beobachten Sie, wie die Schildkröte eine Spur hinterlässt.
+
+Aufgabe: Versetzen Sie die Schildkröte mit `turtle_init()` wieder in den Ausgangszustand.
+Lassen Sie sie dann mit den Vorwärts- und Drehung-Rechts-Anweisungen ein Rechteck zeichnen.
+
+Tipp: Wenn Sie im rechten oberen Teilfenster auf "History" klicken, sehen Sie die Anweisungen, die
+Sie bisher gegeben haben. Anstatt eine Anweisung nochmal einzugeben, können Sie sie dort einfach
+nochmal anklicken. Alternativ können Sie auch inder Konsole die Cursor-Tasten ⇧ und ⇩  verwenden,
+um durch die vorherigen Anweisungen zu blättern und sie zu editieren.
+
+## Skripts
+
+Mit der Funktion "New R-Skript" im Menü "New File" können Sie ein leeres "Skript" anlegen. Das ist
+eine Liste von Anweisungen, die Sie dort vorbereiten, und dann alle auf einmal ausführen.
+
+Aufgabe: 
+
+Starten Sie ein leeres Skript. Füllen Sie die Zeilen mit den Anweisungen, um das Paket
+"TurtleGraphics" zu laden, die Schildkröte zu initialisieren, und die Schildkröte dann ein Quadrat
+zeichnen zu lassen.  
+
+Klicken Sie auf den mit "Source" beschrifteten blauen Pfeil (rechts oben im Eck des Skript-Teilfensters), 
+um alle Anweisungen auf einmal auszuführen. Klicken Sie dann auf den mit "Run" beschrifteten grünen
+Pfeil (oder drücken Sie zugleich Strg und Enter), um einzelne Zeilen auszuführen. Markieren Sie
+mehrere Zeilen mit der Maus und führen Sie sie mit Strg-Enter zusammen aus.
+
+Speichern Sie das Skript mit der Funktion "Save" im Menü "File". Beenden Sie RStudio, starten es
+neu, und laden Sie Ihr Skript wieder. Funktioniert es noch?
+
+<div class="imp">
+Beachten Sie den Unterschied zwischen dem Konsolen-Teilfenster ("console pane") und dem Skript-Teilfenster
+("script pane"):
+
+- Wenn Sie in der Konsole eine Anweisung eintippen und Enter (⏎) drücken, wird sie ausgeführt, und das Ergebnis erscheint in der Konsole, direkt darunter. 
+- Wenn Sie im Skript-Fenster Enter drücken, springt der Cursor lediglich in die nächste Zeile, sonst passiert nichts. 
+- Wenn Sie hingegen im Skript-Fenster Strg-Enter drücken (oder auf den grünen Run-Pfeil klicken), wird die Anweisung in der Zeile,
+in der der Cursor gerade steht, in die Konsole kopiert, und dort ausgeführt. Das Ergebnis erscheint dann in der Konsole, unter der kopierten Anweisung.
+  - Wenn eine Anweisung sich über mehrere Zeilen erstreckt (z.B., weil innerhalb einer Klammer-Paares ein Zeilenumbruch liegt), dann wird die gesamt Anweisung kopiert und ausgeführt.
+  - Besonders wenn im Skript ungepaarte Klammern oder ähnliches vorliegen, kommt R oft durcheinander und kopiert die falschen Zeilen.
+
+Die folgenden Punkte führen zu viel Frustration, wenn man sie nicht im Kopf behält:
+
+- Die Konsole ist nur bereit, neue Anweisungen anzunehmen und auszuführen, wenn ganz unten eine Zeile mit nur `>` (der sog. Prompt) steht.
+- Wenn man in die Konsole eine unvollständige Anweisung eingibt (z.B. `1+` mit fehlendem zweiten Summanden, oder `turtle_forward` mit fehlender schließender Klammer), dann erscheint ein `+` (der Fortsetzungs-Prompt). Dann muss man entweder die Anweisung vervollständigen, oder die "Esc"-Taste drücken, um die Eingabe abzubrechen. Nur so kommt man zurück zum `>`-Prompt.
+- Oft kopiert man versehentlich mit Strg-Enter eine unvollständige Anweisung aus dem Skript in die Konsole. Man sieht dann in der Konsole den `+`-Prompt. Dann muss man auf die Konsole klicken und Esc drücken, bevor man fortfahren kann.
+</div>
+
+## Hausaufgabe
+
+Turtle-Grafik:
+
+- Schreiben Sie ein R-Skript, das die Schildkröte ein auf der Spitze stehendes (also um 45 Grad gedrehtes) Quadrat zeichnen lässt.
+
+- Können Sie auch ein Dreieck oder Fünfeck zeichnen lassen? 
+
+- Eine etwas schwierigere Aufgabe aus dem Kindergarten: Zeichnen Sie das Haus vom Nikolaus.
+
+- Sehen Sie sich den ["Guide to the TurtleGraphics Package for R"](https://cran.r-project.org/web/packages/TurtleGraphics/vignettes/TurtleGraphics.pdf) an und lesen Sie nach, welche Anweisungen die Schildkröte noch versteht. Malen Sie damit ein schönes Bild.
+
+- Nutzen Sie die "Export"-Funktion (der Knopf oben auf dem "Plots"-Teilfenster), um eines Ihrer Bilder abzuspeichern, und laden Sie es auf Moodle hoch.
+
+

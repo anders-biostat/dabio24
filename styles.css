@@ -1,2 +1,11 @@
 /* css styles */
 
+div.imp {
+  border-left: 5px solid orange;
+  padding-left: 15px;
+  margin-left: -20px;
+}
+
+span.imp {
+  border-bottom: 5px solid orange;
+}
