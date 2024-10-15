@@ -1,0 +1,12 @@
+# Vorlesung "Datenanalyse in der Biologie"
+
+Dr. Simon Anders, Universität Heidelberg
+
+Wintersemester 2024/25
+
+<small>[QR-Code](qr_url.html)</small>
+
+## Inhalt
+
+- [Einleitung](einleitung.html)
+- [Erste Schritte mit R](erste_schritte.html)
