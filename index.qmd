@@ -14,3 +14,8 @@ Wintersemester 2024/25
   - Bedienung von RStudio
   - Arithmetik
   - Turtle-Grafik
+- [Erste Schritte mit R, Teil II](erste_schritte_2.html)
+  - Variablen
+  - Vektoren und Vektor-Operationen
+  - Data-frames
+- [Literatur zu R und zu Statistik] (literature.html)

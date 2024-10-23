@@ -1,0 +1,36 @@
+# Tidyverse
+
+## Hausaufgaben
+
+### Tabelle erstellen
+
+Hier ist eine Tabelle mit Temperaturen (in Grad Fahrenheit), die an irgendeinem
+Tag in 6 Städten gemessen wurden:
+
+|city           | temperature|
+|:--------------|-----------:|
+|Beijing        |          35|
+|Lagos          |          88|
+|Paris          |          42|
+|Rio de Janeiro |          84|
+|San Juan       |          81|
+|Toronto        |          30|
+
+Erstellen Sie mit der `c`-Funktion zwei Vektor-Variablen, die jeweils die Werte aus
+einer Spalten enthalten. Nennen Sie die Variablen `city` und `temperature`.
+
+Denken Sie bei der Erstellung des `city`-Vektors daran, die Städtenamen alle in
+Anführungszeichen zu schreiben.
+
+Fügen Sie die beiden Vektoren dann wie folgt zu einer Tabelle zusammen:
+
+```r
+tbl <- data.frame( city, temperature )
+``` 
+
+### Umrechnen
+
+Fügen Sie der Tabelle von eben eine dritte Spalte hinzu, die die Temperatur in
+Grad Celsius enthält. Schlagen Sie dazu nach, wie man Fahrenheit in Celsius
+umrechnet und übersetzen Sie die Formel in R-Notation.
+

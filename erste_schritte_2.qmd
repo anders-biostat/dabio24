@@ -102,6 +102,8 @@ Die zweite Lösung finden wir, indem wir das "$\pm$" als "$-$" schreiben:
 ( -b - sqrt( b^2 - 4*a*c ) ) / ( 2*a )
 ```
 
+*[Die erste Vorlesung endete hier. Der Rest kommt nächste Woche.]*
+
 ### Namen
 
 Der Name einer Variable muss kein einzelner Buchstabe sein:
@@ -133,27 +135,107 @@ ein, um zu prüfen, ob man wirklich 0 erhält ("Probe").
 
 Was geschieht, wenn Sie in der Gleichung den konstanten Term von $-6$ auf $6$ abändern? Warum?
 
+## Etwas mehr Terminologie
 
-## Andere Datentypen
+### Ausdrücke
 
-Jeder Variable hat einen Daten-Typ (*data type*):
+In R-Code wie z.B. `a <- 2*3` nennt man den Teil rechts, also `2*3` einen "Ausdruck" (*expression*). Ein Ausdruck ist also Code, der zu einem Wert ausgewertet werden kann. (*An expression is code that can be evaluated to a value.*) Ein Ausdruck kann dann z.B. einer Variablen zugewiesen werden (`a <- 2*3`), oder es kann auch Teil eiens größeren Ausdrucks sein (`sqrt(2*3)`).
 
-Normale Zahlen haben den Typ "<span class="imp">numeric</span>", auch "double" genannt. ("Double" steht für
-"double-precision floating-point number"; das ist das Standardformat, in dem 
-Computer Kommazahlen speichern.)
+Betrachten wir den Ausdruck `2*a + sqrt(3)`.
+
+Hier sehen wir alle Komponenten, aus denen man einen Ausdruck zusammen bauen kann:
+
+- Literale (*literals*), d.h. explizit angegebenen Werten (hier: `2` und `3`)
+- Variablen (*variables*), für die R beim Auswerten ihren Wert einsetzt (hier: `a`)
+- Operatoren (*operators*), d.h., Zeichen, die eine Rechenoperation durchführen, die zwei Ausdrücke verknüpft. (In unserem Beispiel verknüpft der Multiplikations-Operator `*` das Literal `2` und die Variable `a` und der Additions-Operator `+` verknüpft die Teilausdrücke `2*a` und `sqrt(3)`.)
+- Funktionsaufrufe (*function calls*): In unserem Beispiel ist das `sqrt(3)`
+- Wie erwähnt, kann man Teilausdrücke in runde Klammern setzen, um klar zu stellen, was zusammen ausgewertet werden soll, besonders, wenn man von Punkt-vor-Strich abweichen will.
+
+Ein einzeln stehender (Literal-)Wert oder eine einzeln stehende Variable gelten auch als Ausdruck.
+
+Leerzeichen oder Zeilenumbrüche zwischen den
+
+### Funktionsaufrufe
+
+Wir sehen uns Funktionsaufrufe noch mal genauer an.
+
+Hier runden wir $pi$ auf drei Nachkommastellen:
 
 ```{r}
-class(a)
+round( 3.14159265, 3 )
+```
+
+Ein Funktionsaufruf besteht immer aus dem *Funktionsnamen* (hier: `round`), gefolgt von einem Paar runder Klammern
+(*parentheses*, *parens*), die die *Funktionsargumente* (*arguments*) enthalten. Für jedes Argument ist ein Ausdruck anzugeben. Wenn eine Funktion mehrere Argumente erwartet, müssen die Ausdrücke durch Kommas getrennt werden. 
+
+Die Funktion `round` erwartet zwei Argumente, nämlich erst die zu rundende Zahl und dann die Anzahl der Nachkommastellen. 
+
+Wenn man `?round` angibt, erscheint die *Hilfeseite* für `round`. Dort finden wir die "Signatur" der Funktion:
+
+```r
+round(x, digits = 0, ...)
+```
+
+Dies bedeutet: Das erste Argument heisst `x`, das zweite `digits`. Weiter unten steht, wie die Argumente interpretiert werden. (`x` ist die zu rundende Zahl, `digits` die Anzahld er Nachkommastellen.)
+
+Für `digits` gibt es einen sog. Vorgabe-Wert (sog. *default value*), der durch das `= 0` angegeben ist. Das bedeutet, dass man dieses Argument weg lassen darf (*optional argument*), und das R dann den Default-Wert (hier 0, also keine Nachkommastellen) dafür einsetzt:
+
+```{r}
+round( 3.14159265 )
+```
+
+Die Argumente müssen entweder in genau der Reihenfolge übergeben werden, in der sie in der Signatur stehen (*positional arguments*) oder man gibt die Argument-Namen wie folgt mit an (*named arguments*). Dann darf man von der Reihenfolge abweichen:
+
+```{r}
+round( digits=3, x=3.14159265 )
+```
+
+Das `...` bedeutet (vereinfacht gesagt), dass es evtl. weitere Argumente gibt (die man nur mit Angabe des Argument-Namens verwenden darf).
+
+### Boolsche Ausdrücke
+
+Betrachten Sie diesen Ausdruck:
+
+```{r}
+3 < 7
+```
+
+Hier wurde der Vergleichs-Operator `<` ("kleiner") verwendet. Da der Wert links von `<` tatsächlich kleiner
+ist als der Wert rechts, ist der Ausdruck "wahr" (`TRUE`). Dies ist ein Wert, genauso wie `3` oder `-2.765`
+
+Man kann ihn also einer Variablen zuweisen:
+
+```{r}
+a <- 3 < 7
+a
+```
+
+Solche Werte nennt man "Wahrheitswerte", "logische Werte" (*logical values*) oder
+Boolsche Werte (*Boolean values*, nach dem Mathematiker George Boole)
+
+Logische Werte entstehen z.B., wenn man Vergleichoperatoren verwendet. Es gibt folgende:
+
+- `<` und `>` stehen für "kleiner als" und "größer als"
+- `<=` und `>=` stehen für "kleiner oder gleich" (sonst $\le$ geschrieben) und "größer oder gleich" ($\ge$)
+- `==` bedeutet "gleich". Beachte, dass man `==` schreiben muss, den `=` ist der Zuweisungsoperator (s.o.)
+- `!=` ist wie man "ungleich" ($\neq$) tippt
+
+### Datentypen
+
+Jeder Ausdruck hat einen Daten-Typ (*data type*):
+
+Normale Zahlen haben den Typ "<span class="imp">numeric</span>", auch "double" genannt. ("Double" steht für
+"double-precision floating-point number"; das ist das Standardformat, in dem Computer Kommazahlen speichern.)
+
+Die Funktion `class` zeigt den Datentyp ihres Arguments an:
+
+```{r}
+class(3.14)
 ```
 
 Machmal findet man auch den Typ "<span class="imp">integer</span>" (Ganzzahl).
 
-Ein besonderer Datentyp ist "<span class="imp">logical</span>", auch "Boolean" genannt. Das ist der
-Typ der TRUE/FALSE-Antworten auf unsere Vergleiche:
-
-```{r}
-7 > 3
-```
+Die eben erwähnten Boolschen Ausdrücke haben den Datentyp "<span class="imp">logical</span>"
 
 ```{r}
 class( 7 > 3 )
@@ -165,12 +247,13 @@ class( TRUE )
 
 ## Character strings
 
-Wichtiger ist aber der Typ "Zeichenkette" (engl. *string of characters*, in der
+Wichtig ist auch der Typ "Zeichenkette" (engl. *string of characters*, in der
 Informatik normalerweise kurz als *string* bezeichnet, in R aber abgekürzt als
 *"<span class="imp">character</span>"*):
 
 ```{r}
 s <- "hello"
+class(s)
 ```
 
 <div class="imp">
@@ -205,24 +288,25 @@ Mit Zeichenketten kann man natürlich nicht rechnen:
 Hier beschwert sich R: `Error in "Hello" + 17 : non-numeric argument to binary operator`, d.h.,
 es bemängelt, dass "Hello" keine Zahl ist und man damit nicht addieren kann.
 
-Es gibt aber Funktionen, die nützliches mit Strings anfangen können:
+Es gibt aber Funktionen, die Strings als Argumente erwarten. Zum Beispiel
 
-Anzahl der Zeichen (number of characters)
+`nchar` (number of characters) zählt, wie viele Zeichen der String enthält:
 
 ```{r}
 nchar( "Hello" )
 ```
 
-Umwandlung in Grossbuchstaben (to upper case)
+Die Funktion `toupper` ("to upper case")wandelt einen String in Grossbuchstaben (engl. "upper-case letters") um:
 ```{r}
 toupper( "Hello" )
 ```
 
-Zusamenfügen von Strings:
+So fügt man mehrere Strings zu einem String zusammen:
 ```{r}
 paste( "Hello", "world" )
 ```
-und vieles mehr.
+
+Wir werden noch weiter solche Funktionen kennen lernen
 
 ## Vektoren
 
@@ -239,13 +323,13 @@ Die Variable `v` enthält nun nicht einen Wert sondern sieben:
 v
 ```
 
-<span class="imp">Wir können mit eckigen Klammern (*square brackets*) auf einzelne Werte
+<div class="imp">Wir können mit eckigen Klammern (*square brackets*) auf einzelne Werte
 zugreifen, z.B. auf den vierten Wert (immer von links):
 
 ```{r}
 v[4]
 ```
-</span>
+</div>
 
 ### Vektor-Operationen
 
@@ -264,22 +348,25 @@ v > 3
 
 und erhalten eine Vektor von "logical"-Werten.
 
-Nun erstellen wir einen zweiten Vektor, `w`, mit den Zahlen von 1 bis 7, und benutzne
-dafür die Abkúrzung `1:7`:
+Nun verwenden wir die Funktion `seq` (für "sequence"), um einen Vektor zu erzeugen,
+der die Zahlen von 1 bis 7 enthält, und weisen dies der Variablen `w` zu:
 
 ```{r}
-w <- 1:7
+w <- seq(7)
 w
 ```
-Nun können wir v und w *element-weise* addieren:
+
+Nun können wir die beiden Vektoren `v` und `w` Element für Element (*element-wise*) addieren:
 
 ```{r}
 v + w
 ```
 
-Funktionen wirken oft auch element-weise.
+(Beachten Sie das beide Vektoren gleich viele Element haben.)
 
-Beispiel: Wir schieben jedes Element in `v` durch die Exponentialfunktion:
+Funktionen wirken oft auch *element-wise*.
+
+Beispiel: Wir schieben jedes Element in `v` durch die Exponentialfunktion $e^x$:
 
 ```{r}
 exp(v)
@@ -301,37 +388,66 @@ Wir können die Zahlen in v auch der Größe nach sortieren:
 sort(v)
 ```
 
+### Terminologie
+
+- Die einzelnen Werte in einem Vektor heißen "Elemente" (*elements*).
+- Die Anzahl der Elemente eines Vektors ist seine Länge (*length*).
+- Die Position eines Elements ist sein "Index" (*index*).
+- Auch ein Vektor istb ein Ausdruck oder kann Teil eiens Ausdrucks sein.
+- Ein einzelner Wert heißt "Skalar" (*scalar*)
+
+In den meisten Programmiersprachen wird streng unterschieden zwischen Skalaren
+und Vektoren der Länge 1. Ein Vektor ist ein andere Datentyp als ein Skalar. In R 
+ist das nicht so: Alles ist ein vektor, und ein skalarer Wert ist einfach 
+ein Vektor der Länge 1.
+
+Deshalb steht vor allen Werten immer ein `[1]`. Es zeigt an dass das Element mit 
+dem Index 1 folgt (und bisher war das meist das einzige Element des Vektors).
+
+Bei langen Vektoren sehen wir auch andere Index-Angaben. Hier ein Vektor mit den Zahlen von 100 bis 130:
+
+```{r}
+seq( 100, 130 )
+```
+
 ### Reduzierende Funktionen
 
-In den Beispielen von eben war das Ergebnis stets ein Vektor mit ebensovielen
+In den Beispielen von oben war das Ergebnis aller Audrücke mit Vektoren stets ein Vektor mit ebensovielen
 Elementen wie der Vektor, den wir in die Rechnung hinein gegeben haben.
 
 Es gibt aber auch Funktionen, die eine Vektor mit mehreren Elementen zu einem
 einzelnen Wert zusammen fassen, sog. zusammenfassende Funktionen (*summarising fucntions*),
 auch reduzierene Funktionen (*reducing functions*) genannt.
 
-Wichtigstes Beispiel ist die Bildung des Mittelwertes (*average* oder *mean*):
+Wichtigstes Beispiel ist die Bildung des Mittelwertes (*average* oder *mean*). Hierzu dient die Funtkion `mean`:
 
 ```{r}
 mean( v )
 ```
 
+Häufig möchte man auch einfach alle Elemente aufaddieren. Die Funktion hierfür heißt `sum`:
+
+```{r}
+sum( v )
+```
+
 Wir können auch den Median berechnen:
 
 ```{r}
-median(v)
-```
+median( v )
+``` 
 Dies bedeutet, dass ebenso viele Zahlen in `v` größer als 3 sind wie Zahlen kleiner
 als 3 sind, also 3 in der Mitte liegt, wenn man den Vektor sortierte.
 
 Andere gerne verwendete Statistiken sind Varianz (*variance*) und Standard-Abweichung 
-(*standard deviation*, SD):
+(*standard deviation*, SD), die durch die Funktionen `var` und `sd` berechnet werden:
 
 ```{r}
 var( v )
 sd( v )
 ```
-Auch `length` ist eine summarising function. Sie zählt einfach, wie viele Element
+
+Auch `length` ist eine summarising function. Sie zählt einfach, wie viele Elemente
 der Vektor enthält:
 
 ```{r}
@@ -342,7 +458,7 @@ length( v )
 
 #### Mittelwert "per Hand"
 
-Die Funktion `sum` addiert alle Elemente eines vektors auf und liefert ihre Summe.
+Die Funktion `sum` addiert alle Elemente eines Vektors auf und liefert ihre Summe.
 Den Mittelwert berechnet man bekanntlich, indem man die Summe durch die Anzahl der
 Werte teilt. Berechnen Sie den Mittelwert von `v` auf zwei Wege: zum einen
 mittels `mean`, zum anderen mittels `sum` und `length`.
@@ -366,9 +482,57 @@ jeden Schritt, bevor Sie den nächsten vornehmen.
 
 Vergleichen Sie mit dem Ergebnis der `var`-Funktion.
 
+### Erzeugung von Vektoren
+
+Wir haben zwei Methoden zur Erzeugung von Vektoren besprochen: `c` und `seq`.
+
+Hier noch einige weitere Details hierzu:
+
+Mit der Funktion `c` kann man nicht nur einzelne Elemente, sondern auch mehrere Vektoren
+zusammen fassen. Der folgende Ausdruck hängt den Vektor `v` von zuvor, die Zahl `100`
+und den Vektor `w` (mit den Zahlen von 1 bis 7) aneinander:
+
+```{r}
+c( v, 100, w )
+```
+
+Die Funktion `seq` kann auch noch mehr:
+
+Mit einem Argument zählt sie bis zur angegeben Zahl:
+
+```{r}
+seq(7)
+```
+
+Mit zwei Argumenten zählt sie vom ersten zum zweiten Argument
+
+```{r}
+seq( 5, 10 )
+```
+
+Mit drei Argumenten kann man auch eine Schrittweite angeben. Hier zählen wir von 2 bis 6
+in Schritten von jeweils 0.5:
+
+```{r}
+seq( 2, 6, 0.5 )
+```
+
+Die Form mit zwei Argumenten ist so häufig, dass es eine Abkürzung gibt: Statt `seq(5,10)`
+kann man kurz `5:10` schreiben:
+
+```{r}
+5:10
+```
+
+#### Aufgabe: Sinuskurve
+
+Erzeugen Sie einen Vektor `x` mit Zahlen von 0 bis 10  in Schritten zu je 0.1.
+Berechnen Sie dann `y <- sin(x)`. Was finden Sie dann in y? Mit `plot( x, y )` können 
+Sie es schnell heraus finden.
+
 ## Tabellen
 
-Nun verwenden wir ein beispiel auf Irizarrys Buch.
+Für diesen Abschnitt verwenden wir ein Beispiel auf Irizarrys Buch.
 
 Wir laden dazu das Paket "dslab", dass die Beispieldaten aus dem Buch enthält.
 
@@ -387,7 +551,7 @@ murders
 
 Mit `?murders` können wir die zugehörige Hilfeseite aufrufen und erfahren so,
 dass es sich um eine Tabelle mit der Anzahl an durch Feuerwaffen verübte
-Morde im jahr 2010 handelt, aufgeschlüsselt nach Staaten.
+Morde im Jahr 2010 handelt, aufgeschlüsselt nach Staaten in den USA.
 
 Der Typ dieser Variable is "data.frame":
 
@@ -395,8 +559,8 @@ Der Typ dieser Variable is "data.frame":
 class(murders)
 ```
 
-"Data frame" ist R's Weg, Tabellen zu speichern, nämlich als Liste von Vektoren. Jeder
-Vektor stellt eine Spalte dar. Wir können auf die einzelnen Vektoren zugreifen, indem
+"Data frame" ist R's Weg, Tabellen zu speichern, nämlich als eine Liste von Vektoren. Jeder
+Vektor stellt eine Spalte der Tabelle dar. Wir können auf die einzelnen Vektoren zugreifen, indem
 wir den Spaltennamen hinter den Variablennamen stellen, getrennt durch ein Dollarzeichen (`$`):
 
 Hier die erste Spalte:
@@ -431,12 +595,13 @@ Hier ist unsere neue Tabelle:
 murders
 ```
 
+
 ## Hausaufgaben
 
 ### Runden
 
-Verschönern Sie die eben erstellte Tabelle, in dem Sie die Werte in der neuen Spalte
-auf eine Nachkommestelle runden. (Erinnern Sie sich an die Funtkion `round` aus der vorherigen Stunde.)
+Verschönern Sie die eben erstellte Tabelle mit der Mordstatistik, in dem Sie die Werte in der neuen Spalte
+`murders_per_million` auf eine Nachkommestelle runden. (Erinnern Sie sich an die wieter oben eingeführte Funktion `round`.)
 
 ### Abspeichern
 
@@ -444,30 +609,27 @@ Speichern Sie die Tabelle mit der Mordstatistik in eine Datei ab, indem Sie die 
 `write.csv( murders, "murders.csv" )`. Sie sollten dann auf Ihrer Festplatte eine Datei mit Namen `murders.csv`
 finden. Laden Sie diese in Excel (oder einem anderen Tabellenkalkulationsprogramm).
 
-### Tabelle erstellen
+### Plotten
 
-Hier ist eine Tabelle mit Temperaturen (in Grad Fahrenheit), die an irgendeinem
-Tag in 6 Städten gemessen wurden:
+Verwenden Sie die nochmals die Funktion `plot`. Übergeben Sie zunächst die Tabellenspalte mit der Einwohnerzahl als erstes Argument (x-Werte) und die Spalte mit der Anzal der Morde (`total`) als y-Achse. 
 
-|name           | temperature|
-|:--------------|-----------:|
-|Beijing        |          35|
-|Lagos          |          88|
-|Paris          |          42|
-|Rio de Janeiro |          84|
-|San Juan       |          81|
-|Toronto        |          30|
+- Wie ändert sich der Plot, wenn Sie die Mord-Rate (Morde pro Million Einwohner) statt der Mord-Anzahl verwenden?
 
-Erstellen Sie mit der `c`-Funktion zwei Vektor-Variablen, die jeweils eine
-Spalte enthalten. Fügen Sie die beiden Vektoren dann zu einer Tabelle zusammen
-indem Sie `data.frame( spalte1, spalte2 )` schreiben, wobei `spalte1` und
-`spalte2` die Namen ihrer beiden Spalten-Variablen sind.
+- Welcher "Staat" sticht dann hervor? Wo ist die Mordrate am höchsten? Können Sie das erklären?
 
-### Umrechnen
+- Ergänzen Sie im Aufruf der `plot`-Funktion als drittes Argument hinzu: `log="x"`. Was ändert sich? Ist das nützlich?
 
-Fügen Sie der Tabelle von eben eine dritte Spalte hinzu, die die Temperatur in
-Grad Celsius enthält. Schlagen Sie dazu nach, wie man Fahrenheit in Celsius
-umrechnet und übersetzen Sie die Formel in R-Notation.
+### R-Skript
+
+Erstellen Sie ein R-Skript, dass die R-Anweisungen für die vorstehenden Aufgaben enthält. Das 
+Skript sollte also die Mordstatstik-Tabelle laden, die Spalte mit der Mordrate hinzufügen
+und dann einen der Plots erstellen. Speichen Sie das Skript ab.
+
+Wählen Sie im Menü "Session" von RStudio erst die Menü-Funktion "Clear Workspace" und dann die Funktion
+"Restart R" aus. Damit wird R in den Auusgangszustand zurückversetzt. Führen Sie alle Zeilemn Ihres Skripts
+aus, um sich zu überzeugen, dass noch alles funkioniert und nichts fehlt.
+
+Bitte laden sie die Datei mit dem Skript auf Moodle hoch.
 
 ### Installation Tidyverse
 
@@ -480,64 +642,3 @@ install.packages( "tidyverse" )
 
 in der RStudio-Konsole einzugeben. Allerdings braucht die Installation ca. 5-10
 Minuten, daher sollten Sie das vor der nächsten Vorlesung erledigt haben.
-
-## Literatur
-
-Diese Lehrbücher, die alle sowohl gedruckt, wie auch kostenlos online verfügbar sind, 
-können Sie neben der Vorlesung nutzen, um etwas nachzuschlagen:
-
-- Rafael Irizarry: *Introduction to Data Science* / Data Wrangling and Visualization with R. [online](http://rafalab.dfci.harvard.edu/dsbook-part-1)
-
-- Susan Holmes and Wolfgang Huber: *Modern Statistics for Modern Biology*. [online](https://www.huber.embl.de/msmb/)
-
-- Hadley Wickham, Mine Çetinkaya-Rundel, and Garrett Grolemund: *R for Data Science* (2nd edition). [online](https://r4ds.hadley.nz/)
-
-## Erste Schritte mit R
-
-siehe nächstes Dokument
-
-## Nur Übung macht den Meister
-
-Datenanalyse mit R ist ein *Handwerk*. Man lernt es durch Üben, nicht, indem man in der
-Vorlesung nur zuhört. Wenn Sie beim Üben zurück fallen, werden Sie schnell nicht mehr folgen 
-können. Machen Sie also die Hausaufgaben!
-
-Programmieren kann fristrieren: Oft hängt man an einem kleinen Fehler, den man einfach
-nicht sieht, oder hat etwas leicht falsch verstanden, und dann versteht einen der Computer
-deshlab nicht. Mit einem Tipp kommt man aber sofort weiter. Daher brauchen Sie, besonders anfangs,
-beim Üben einen Tutor!
-
-Daher werden wir während der Vorlesung immer wieder Pausen machen, während derer Sie im Hörsaal
-üben und sich an die anwesenden Tutoren wenden können. Bringen Sie daher bitte Ihren Laptop stets mit.
-(Wenn Sie keinen Laptop besitzen, wenden Sie sich bitte an mich.) Laden Sie bitte vorher den Akku auf.
-
-Damit Sie von den Tutoren profitieren, müssen Sie sich **trauen, Fragen zu stellen**. Das ist **extrem wichtig**.
-
------
-
-## Hausaufgabe
-
-Bitte machen Sie bis Donnerstag bitte folgendes:
-
-- Installieren Sie auf Ihrem Laptop R und RStudio (s.o.).
-
-- Stellen Sie R einige einfache Rechenaufgaben, z.B. $3+7$, $\frac{2\cdot 5-13}{3}$, $\sqrt{3}$, usw.
-
-- Was ist $\sqrt{2}\sin\frac{pi}{4}$? (Um $\pi$ einzugeben, schreiben Sie einfach `pi`.) 
-
-- Zeichnen Sie mit TurtleGraphics ein rechtwinkliges und ein gleichseitiges Dreieck.
-
-- Wählen Sie in RStudio mit dem Menü "Datei", Unterpunkt "Neue Datei", dann "Neues R-Skript". Sie erhalten   
-  ein leeres "Blatt". Tippen Sie in dieses die Befehle für das Dreieck. Führen Sie den Code aus. Speichern
-  Sie ihn dann ab, schließen Sie RStudio, starten es neu, und öffnen Sie Ihre Datei. Funktioniert der Code
-  noch? Wenn nein, was fehlt?
-
-Wenn Sie Schwierigkeiten haben, kein Sorge! WIr besprechen alles am Donnerstag nochmal Schritt für Schritt.
-
------
-
-## Webseite zur Vorlesung:
-
-![](img/qr_url.png)
-
-`https://papagei.bioquant.uni-heidelberg.de/simon/Vl2324/`
