@@ -18,4 +18,22 @@ Wintersemester 2024/25
   - Variablen
   - Vektoren und Vektor-Operationen
   - Data-frames
-- [Literatur zu R und zu Statistik] (literature.html)
+- [Tabellen und Tidyverse: Grundlagen](tidyverse_intro.html)
+  - Tidyverse: Grundlagen
+  - Tabellen
+  - Tidyverse-Verben mutate, arrange, filter, und select
+  - Streudiagramme
+- [Reduktionen mit Tidyverse](group_by.html)
+  - mehr zu group_by und summerize
+  - Umgang mit fehlende Daten (`NA`s)
+  - zählen mit `sum`
+  - logische Operatoren: "nicht", "und", und "oder"
+- Joining und Pivoting
+  - [Table-Joins](left_join.html)  
+  - [Pivoting](pivoting.html)
+  - [Hausaufgabe](hausaufgabe_join_pivot.html)
+
+## Weitere Links
+
+- [Video-Aufzeichnungen der Vorlesung](https://www.youtube.com/playlist?list=PL3RVGH-VQHwIF56KXWWgCsRLHgcxNVsrE)
+- [Literatur zu R und zu Statistik](literature.html)

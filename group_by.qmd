@@ -1,0 +1,325 @@
+# Tidyverse: weitere Details
+
+## Lösung Hausaufgabe
+
+Wir besprechen zunächst die Hausaufgabe, dann gehen wir auf einige Schwierigkeiten ein, die dabei entstanden sein könnten.
+
+### Aufgabe zur "murders"-Tabelle
+
+Wir laden zunächst tidyverse und das `dslabs`-Paket mit Beispieldaten, zu denen auch die `murders`-Tabelle gehört:
+
+```{r}
+suppressPackageStartupMessages({
+  library( tidyverse )
+  library( dslabs ) })
+
+head( murders )
+```
+
+Nun berechnen wir die Mordrate pro Region
+
+```{r}
+murders %>%
+group_by( region ) %>%
+summarise( 
+  population = sum(population), 
+  murders = sum(total) ) %>%
+mutate( rate = murders / population * 100000 )
+```
+
+<div class="imp">Abtasten einer Tidyverse-Pipeline: Wenn Sie verstehen wollen, wie dieser Code funktioniert, führen Sie ihn Schritt für Schritt aus, indem Sie zunehmend größere Teile des Codes markieren, immer vom Anfang bis direkt *vor* ein Pipe-Symbol `%>%`, und führen Sie diesen Code aus. So sehen Sie, wie die Tabellen mit Zwischenergebnissen aussehen, die durch das Pipe-Symbol geschoben werden. </div>
+
+### Aufgabe zur NHANES-Tabelle: Plot
+
+```{r}
+read.csv( "data_on_git/nhanes.csv" ) -> nhanes
+
+nhanes %>%
+ggplot() +
+  geom_point( aes( x=age, y=height, col=gender ), size=.3 )
+```
+
+### Aufgabe zur NHANES-Tabelle: mittlere Körpergröße
+
+```{r}
+nhanes %>%
+filter( age >= 18 )  %>%
+group_by( gender ) %>%
+summarise( avg_height = mean( height, na.rm=TRUE ) )
+```
+
+Hier mussten wir `na.rm=TRUE` anfügen, um dafür zu sorgen, dass fehlende Werte übersprungen werden. Näheres dazu siehe unten.
+
+## Pfade zu Dateien
+
+[...]
+
+### Aufgabe
+
+1. Speichern Sie die Tabelle mit den Mordraten pro Region (s.o.) im CSV-Format. Verwenden Sie dazu `write_csv`, wie folgt
+
+```r
+tabelle %>% write_csv( "tabelle.csv" )
+```
+
+Laden Sie die Datei `tabelle.csv` in Microsoft Excel oder in einem anderen Tabellenkalkulationsprogramm.
+
+
+2. Erstellen Sie in Excel eine Tabelle mit einigen Spalten und Zeilen. Achten Sie darauf, dass die Spaltenüberschriften in der ersten Zeile stehen. Erstellen Sie mindestens eine Spalte mit numerischen Werten und eine mit Strings. Speichern Sie die Tabelle im CSV-Format. Laden Sie die Tabelle dann in R mit `read_csv`. (Wenn das nicht funktioniert, versuchen Sie `read_csv2`).
+
+## Fehlende Daten
+
+In der Statistik hat man oft mit fehlenden Daten (*missing data*) zu tun. In R wird ein fehlender Wert durch `NA` (für "not available") gekennzeichnet.
+
+Eine Rechnung, die einen fehlenden Wert enthält, ergibt ein fehlendes Ergebnis:
+
+```{r}
+7 + NA
+```
+
+Fehlende Daten sind somit "ansteckend", wie das folgende Beispiel zeigt.
+
+Hier ist die Arbeitslosenstatistik des fiktiven Landkreises "Zettkreis":
+
+```{r}
+tibble(
+  Gemeinde = c( "Astadt", "Bedorf", "Ceheim", "Deburg" ),
+  Einwohner = c( 13245, 12716, 8452, 33417 ),
+  Arbeitslose = c( 1020, 832, NA, 1995 )
+) -> zett_tabelle
+
+zett_tabelle
+```
+
+Die Arbeitslosenzahl von Cedorf fehlt.
+
+Wir berechnen die Arbeitslosigkeitsrate ("Alr"):
+
+```{r}
+zett_tabelle %>% mutate( Alr = Arbeitslose / Einwohner )
+```
+
+Für Cedorf hat sich das `NA` von der Spalte `Arbeitslose` in die Spalte `Alr` fortgepflanzt. Das macht auch Sinn, denn die Rate kann nicht berechnet werden.
+
+Wir versuchen, die Gesamt-Alr des Landkreises zu berechnen und addieren dazu die Zeilen:
+
+```{r}
+zett_tabelle %>%
+summarise( sum(Einwohner), sum(Arbeitslose) )
+```
+
+Das funktioniert nicht, denn eine das eine `NA` hat sich forgepflanzt.
+
+Wir können alle Zeilem entfernen, bei denen ein `NA` steht. Dazu brauchen wir die Funktion `is.na`. Sie gibt `TRUE`, wenn ein Wert fehlt:
+
+```{r}
+is.na( c( 13, 15, 7.2, NA, -3.5 ) )
+```
+
+`filter` soll aber die Zeilen behalten, wo *kein* `NA` steht. Wir müssen den von `is.na` gelieferten logischen Vektor in sein Gegenteil umkehren. Dazu dient der "Nicht-Operator" (logical-*not* operator), der als `!` geschrieben wird:
+
+```{r}
+!is.na( c( 13, 15, 7.2, NA, -3.5 ) )
+```
+
+Das können wir für `filter` verwenden:
+
+```{r}
+zett_tabelle %>%
+filter( !is.na(Arbeitslose) )
+```
+
+Nun können wir zumindest mit diesen Daten rechnen:
+
+```{r}
+zett_tabelle %>%
+filter( !is.na(Arbeitslose) ) %>%
+summarise( Alr = sum(Arbeitslose) / sum(Einwohner) )
+```
+
+<div class="imp">Man kann viele reduzierenden Funktionen auch anweisen, `NA`s einfach zu überspringen, indem man das optionale Argument `na.rm=TRUE` setzt:</div>
+
+```{r}
+v <- c( 3, 5, 7, NA, -3 )
+
+sum( v )
+
+sum( v, na.rm=TRUE )
+```
+
+Oben haben wir das verwendet.
+
+Hier ist es aber nicht sinnvoll. 
+
+```{r}
+zett_tabelle %>%
+summarise( Alr = sum(Arbeitslose, na.rm=TRUE) / sum(Einwohner, na.rm=TRUE) )
+```
+
+(Warum ist das falsch?)
+
+## Logische Operatoren
+
+Hier schieben wir eine Tabelle der "logischen Operatoren" ein:
+
+<div class="imp">
+- `!` bedeutet "nicht"
+- `&` bedeutet "und"
+- `|` bedeutet "oder"
+</div>
+
+Beispiel: Wir fragen für jede Gemeinde(n) im Landkreis: "Hat die Gemeinde über 10000 Einwohner UND zugleich unter 1000 Arbeitslose?"
+
+```{r}
+zett_tabelle %>%
+mutate( Antwort = Einwohner>10000 & Arbeitslose<1000 )  
+```
+## Mehrere Gruppenvariablen
+
+Was ist die mittlere Körpergröße der erwachsenen NHANES-Probanden, gruppiert nach Geschlecht und Ethnie?
+
+```{r}
+nhanes %>%
+filter( age >= 18 & !is.na(height) ) %>%
+group_by( gender, ethnicity ) %>%
+summarise( avg_height = mean(height) )
+```
+
+Wie viele Probanden sind in jeder dieser Gruppen?
+
+```{r}
+nhanes %>%
+filter( age >= 18 & !is.na(height) ) %>%
+group_by( gender, ethnicity ) %>%
+summarise( avg_height = mean(height), n=n() )
+```
+
+## Regeln für group_by / summarize
+
+<div class="imp">
+- Die Tabelle, die von einem `summarize` erzeugt wird, enthält *nur* Spalten mit Gruppierungs-Variablen und Spalten mit Summarisierungs-Ergebnissen.
+- Die Gruppierungs-Variablen sind die Spalten, die zuvor mit `group_by` gewählt wurden. Sie erscheinen in der Ergebnistabelle zunächst.
+- Dann folgen die Ergebnisse der Summarisierung(en), die in `summerize` angefordert wurde(n).
+- Eine Summarisierung (auch "Reduktion" genannt) ist ein Ausdruck, 
+  - in die R die zu eine Gruppe gehörenden Werte der Spalten als *Vektoren* hineingibt
+  - und der hieraus einen *einzelnen* Wert erzeugt.
+- Beispiele für Summarisierungen: 
+  - `mean(height)`, oder auch `mean(height)/100`
+  - keine Summarisierung: `height/100`
+- In `summerize` kann man vor jede Summarisierungs-Operation den gewünschten Spaltennamen mit `=` voranstellen.
+</div>
+
+<div class="imp">
+Häufig verwendete Summerisierungsfunktionen:
+ - `sum` (Summe)
+ - `mean` (Mittelwert)
+ - `median` (Median)
+ - `n` (Anzahl der Werte)
+ - `var` und `sd`  (Varianz und Standardabweichung)
+</div>
+
+## Zählen
+
+<div class="imp">Wenn man `sum` auf einen logischen Vektor anwendet, erhält man die Anzahl der `TRUE`s:</div>
+
+```{r}
+v <- c( -2, 3, 7, 10, 0 )
+v > 5
+sum( v>5 )
+```
+
+Wie zuvor kann man `NA`s ggf. überspringen:
+
+```{r}
+v <- c( -2, NA, 7, 10, 0 )
+v > 5
+sum( v>5 )
+sum( v>5, na.rm=TRUE )
+```
+
+## Hausaufgaben
+
+Diesmal sind es etwas mehr Aufgaben. Versuchen Sie sich bitte an allen, damit Sie Routine mit R bekommen.
+
+### Aufgabe 1
+
+*Diese Aufgabe hatten wir am Ende der Vorlesung bereits angefangen, gemeinsam zu bearbeiten*.
+
+a. Zählen Sie, wie viele Probanden in der NHANES-Tabelle größer als 190 cm sind. 
+
+b. Gruppieren Sie nach Geschlecht und Ethnie. Zählen Sie für jede Gruppe getrennt, wie viele Probanden insgesamt in der Gruppe sind, und wie viele über 190 cm groß sind. 
+
+(Die Lösung zu dieser Aufgabe können Sie sich zusammen bauen, indem Sie mit dem Beispielcode oben aus dem Abschnitt "Mehrere Gruppenvariablen" beginnen, und diesen abändern, indem sie Konstruktion mit `sum` aus dem Abschnitt "Zählen" verwenden -- denn was sich geändert hat ist dass wir nicht mehr fragen, was der *Mittelwert* der Körpergröße ist, sondern statt dessen, *wie viele* Probanden größer als 190 cm sind. Beides wird durch eine Summarisierungs-Operation gelöst.)
+
+c. Berechnen Sie für jede Gruppe den prozentualen Anteil an Über-1.9-Meter-Probanden.
+
+### Aufgabe 2
+
+In der Hausaufgabe der vorigen Woche wir in der NHANES-Tabelle die mittlere Körpergröße, aufgeschlüsselt nach Geschlecht und Ethnie, berechnet. Schlüsseln Sie diesmal nach Geschlecht und Alter auf. 
+
+Erzeugen Sie einen Plot, der die Durschnittsgröße von Frauen/Mädchen und von Männern/Jungen für jedes Lebensalter darstellt.
+
+Interpretieren Sie den Plot: Wie unterscheidet sich das Wachstum von Jungen und Mädchen? 
+
+Wie viele Zentimeter wächst ein Junge oder ein Mädchen im Mittel pro Jahr? Wie ändert sich die Wachstums-Geschwindigkeit von über die Jahre? Zu welchem Alter hört man tyoischerweise auf, weiter zu wachsen?
+
+Vielleicht hilft es, in der x-Achse des Plots hineinzuzoomen, und die Achse nur von 0 bis 30 Jahre laufen zu lassen. Googlen Sie, wie man den auf der Achse dargestellten Wertebereich ("axis limits") ändert, wenn man "ggplot" verwendet.
+
+### Aufgabe 3
+
+Bauen Sie Schritt für Schritt eine Tidyverse-Pipeline wie folgt auf:
+
+- Beginnen Sie mit der NHANES-Tabelle
+
+- Entfernen Sie Probanden, wo die Körpergröße oder das Gewicht fehlt, sowie Probanden mit Alter unter 18 Jahren.
+
+- Fügen Sie eine Spalte `bmi` hinzu, die den Body-Mass-Index berechnet. Die Formel lautet wie folgt
+
+$$ \text{BMI} = \frac{\text{Gewicht in kg}}{(\text{Körpergröße in Meter})^2} $$
+Denken Sie bei der Anwendung der Formel daran, dass unsere Tabelle die Körpergröße in Centimeter enthält. Sie müssen also `(height/100)` schreiben.
+
+- Erwachsene mit einem BMI über 25 gelten laut WHO-Leitlinien als übergewichtig. Bei einem BMI über 30 liegt krankhaftes Übergewicht ("Adipositas") vor. Zählen Sie, wie viele Probanden übergewichtig sind und wie viele adipös.
+
+- Ermitteln Sie diese Zahlen aufgeschlüsselt nach Geschlecht und Ethnie, und rechnen Sie sie in Prozent um.
+
+Ersatzergebnis: Das korrekte Ergebnis, zum Vergleichen, finden Sie hier: [nhanes_bmi_smr.csv](data_on_git/nhanes_bmi_smr.csv)
+
+Erstellen Sie nun ein Diagramm der Übergewichts-Anteile. Verwenden Sie Ethnie als x-Achse, Prozent übergewichtig als y-Achse, und stellen Sie das Geschlecht durch die Farbe dar. Ersetzen Sie dann `geom_point( aes(...) )` durch `geom_col( aes(...), position="dodge")` und dann noch `col` durch `fill`. Sie sollten ein Säulendiagramm (auch Balkendiagramm genannt, engl. *bar chart*) erhalten.
+
+### Aufgabe 4
+
+*Datenaustausch mit Excel*: In der Vorlesung hatten einige von Ihnen hier Schwierigkeiten. Inzwischen habe ich nachgeschlagen, woran das lag. Versuchen Sie es also bitte nochmals:
+
+- Wählen Sie eine beliebige Tabelle, wie sie vielleicht als Ergebnis bei einigen der vorherigen Übungen erzeugt wurde und speichern Sie sie als CSV-Datei:
+
+```r
+tabelle %>% write_csv( "tabelle.csv" )
+```
+
+Die Datei liegt nun im Format "comma-separated values" vor.
+
+- Benutzen Sie einen Text-Editor und laden Sie die Datei. Der Standard-Texteditor von Windows heißt "Notepad"; bei MacOS heisst er "TextEdit". Sie werden sehen, wie das CSV-Format aussieht: Jede Zeile der Tabelle ist eine Textzeile, die allererste Zeile enthält die Spaltennamen, und die Spalten sind durch Kommas getrennt. Daher der Name: "CSV" steht für "comma-separated values".
+
+Das Problem: Im Deutschen wird das Komma als Dezimaltrenner verwendet. (Im Deutschen schreibt man "1,5" für 1½, im Englischen "1.5".) Daher weicht Excel aus und verwendet ein Semikolon (Strichpunkt) als Spaltentrenner, wenn man bei der Installation von Office deutsch und nicht englisch ausgewählt hat. R hingegen benutzt immer das englische Format ("`.`" als Dezimaltrenner, "`,`" als Spaltentrenner), wenn man `read_csv` oder `write_csv` benutzt, bietet aber `read_csv2` und `write_csv2` als Alternative an. Letztere Funktionen arbeiten mit dem Alternativformat ("`,`" als Dezimaltrenner, "`;`" als Spaltentrenner), das ein Excel erwartet, das auf Deutsch (oder eine andere Sprache mit Komma statt Punkt als Dezmialtrenner) eingestellt ist.
+
+- Laden Sie die Datei in Excel. Damit das klappt müssen Sie den sog. "Import-Wizard" verwenden, denn dort könenn Sie angeben, ob die Spalten durch Kommas oder Strichpunkte getrennt sind.
+
+  - für ältere Office-Versionen: Starten Sie Excel, und wählen Sie im Menü "Datei" ("File") die Funktion "Datei öffnen" ("Open file"). Im Lade-Dialog steht rechts unten, dass nur Excel-Dateien angezeigt werden. Ändern Sie das auf "alle Dateien". Wählen Sie die CSV-Datei aus. Es erscheint der "Import-Wizard".
+  
+  - für Office 2019 und Office 365: Starten Sie Excel, und wählen Sie im Reiter "Daten" (tab "data") die Funktion "Daten abrufen" ("Get Data") unnd dort "Aus Text/CSV" ("From Text/CSV"). Dann sollte der "Import Wizard" erscheinen.
+  
+(Da ich gerade kein aktuelles Excel zur Hand habe, habe ich ChatGPT gefragt, wie die Optionen beschriftet sind. Geben Sie mir bitte Bescheid, falls ChatGPT falsch liegt.)  
+
+- Ändern Sie etwas an der Tabelle, und speichern Sie sie im CSV-Format.Dazu brauchen Sie die Funktion "Speichern unter" ("Save as"), denn dort können Sie den "Dateityp" ("type") auf "CSV" schalten. In neueren Excel-Versionen können Sie noch das Encoding auswählen. Wählen Sie hier "UTF-8". (Das ist nur wichtig, wenn Sie Umlaute o.ä. im Text haben.)
+
+- Laden Sie die geänderte CSV-Datei in R. Ist die Änderung angekommen?
+
+### Forum
+
+Wenn Sie Schwierigkeiten mit den Aufgaben haben, stellen Sie eine Frage auf dem [Moodle-Forum](https://moodle.uni-heidelberg.de/mod/forum/view.php?id=1197425).
+
+### Abgabe auf Moodle
+
+Stellen Sie Code, Plots und Antworten für die Aufgaben 1 bis 3 zusammen (z.B. in einer Word-Datei) und laden Sie ein PDF auf Moodle hoch. (Wenn Sie Word verwenden, benutzen Sie zu Darstellung von Code bitte eine `Monospace`-Font wie z.B. `Courier`.)
+
+Das Kopieren von Code und Ergebnissen von RStudio zu Word ist mühsam und fehleranfällig. Wir werden bald lernen, wie man PDFs bequem direkt in RStudio erzeugt, mit "Quarto Documents" oder "R Notebooks". Wenn Sie wollen, können Sie RStudio's Quarto-Funktionalität aber schon jetzt ausprobieren.

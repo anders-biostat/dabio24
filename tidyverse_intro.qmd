@@ -1,0 +1,371 @@
+---
+title: "Tidyverse und Tabellen"
+format:
+  html:
+    df-print: paged
+---
+
+## "Altes" R vs Tidyverse
+
+R hat eine lange Geschichte und wurde in den letzten drei Jahrzehnten kontinuierlich weiter entwickelt. Daher gibt es für viele Aufgaben in R mehrere Möglichkeiten, die jeweils zu einer anderen Zeit der aktuelle "Stil" waren.
+
+In den letzten Jahren haben viele Nutzer von R auf das sog. "Tidyverse" umgestellt. Das "Tidyverse" ist ein von Hadley Wickham initiiertes und geleitetes Projekt, R zu modernisieren und "aufzuräumen".
+
+Für viele Aufgaben in R gibt es einen "alten" Weg und einen neuen "Tidyverse-Weg". In dieser Vorlesung werden wir meist der Tidyverse-Methodik folgen. 
+
+Standard-Lehrbuch für das Tidyverse ist das Buch *R for Data Science* (2nd edition) von H. Wickham, M. Çetinkaya-Rude und G. Grolemund, dass kostenlos online verfügbar ist: https://r4ds.hadley.nz/
+
+## Installation des Tidyverse
+
+Bevor Sie Tidyverse *zum ersten Mal* nutzen, müssen Sie es durch 
+```r
+install.packages( "tidyverse" )
+```
+installieren.
+
+Vor *jeder* Nutzung müssen Sie Tidyverse mit
+```{r}
+library( tidyverse )
+```
+laden.
+
+## Tabellen
+
+In der Statistik liegen Daten meist als Tabelle vor. In R ist eine Tabelle eine Liste von Vektoren, wobei jede Tabellenspalte durch einen Vektor dargestellt wird. R bezeichnet eine solche Tabellen als <span class="imp">*data frame*</span>. In Tidyverse wird auch die Bezeichnung *tibble* ("tidy table") verwendet.
+
+Wir laden das Paket `dslabs` ("data science labs"), das Tabellen mit Beispieldaten enthält, die R. Irizarry (Harvard) für seine Vorlesungen zusammen gestellt hat.
+
+```{r}
+library( dslabs )
+```
+Denken Sie daran, dass Sie das Paket mit `install.packages("dslabs")` installieren müssen, bevor Sie es zum ersten Mal laden.
+
+Nun steht uns z.B. die Tabelle `murders` zur Verfügung:
+
+```{r}
+murders
+```
+
+Mit
+```r
+?murders
+```
+können Sie sich die Beschreibung ("Hilfe-Seite") zum Datensatz anzeigen lassen, und erfahren, dass es sich um eine Statistik zur Anzahl von Morden mit Feurwaffen in den USA im Jahr 2010 handelt, die von dieser [Wikipedia-Seite](https://en.wikipedia.org/wiki/Gun_death_and_violence_in_the_United_States_by_state) übernommen wurde. Die Spalte `total` enthält dabei die Anzahl der Morde durch Feuerwaffen.
+
+## Sortieren mit Tidyverse
+
+In Tidyverse werden sog. "Tidyverse-Verben" verwendet, um Tabellen zu bearbeiten. Als erstes Verb lernen wir <span class="imp">`arrange`</span> kennen, dass Tabellen sortiert. Wir sortieren die Tabelle `murders` nach den Werten in der Spalte `population` (Einwohnerzahl):
+
+```{r}
+arrange( murders, population )
+```
+
+## Plotten mit ggplot
+
+Ein Teilpaket von Tidyverse ist `ggplot2`, das Fuintionalität zur Daten-Visualisierung bereit stellt. Das folgende Beispiel erzeugt ein Streudiagramm (*scatter plot*) der Anzahl der Morde gegen die Einwohnerzahl:
+
+```{r}
+ggplot(murders) +
+  geom_point( aes( x=population, y=total ) )
+```
+Die allgemeine Struktur eines `ggplot`-Aufrufs besprechen wir weiter unten. Wir erkennen aber schon jetzt die Struktur `ggplot(tabelle) + geom_point( aes( x=spalte1, y=spalte2 ) )`, wobei `tabelle` eine Tabelle (data frame) mit Daten ist, und spalte1 und spalte2 sind die Spalten-Überschriften (*column names*) der Spalten, denen die x- und y-Koordinate der Punkte entnommen werden sollen. Jede Zeile der Tabelle ist ein Punkt.
+
+`geom_point` gibt den Typ des Diagramms an: hier ein Streudiagramm (*scatter plot*), d.h., jede Zeile wird durch einen Punkt dargestellt. Es gibt eine vielzahl weitere `geom`s.
+
+`geom_text`, z.B., setzt statt eines Punktes einen kurzen Text:
+
+```{r}
+ggplot(murders) +
+  geom_text( aes( x=population, y=total, label=abb  ) )
+```
+
+Wir können auch weitere Details spezifizieren, z.B. die Achsenbeschriftungen (*axis labels*), indem wir `xlab` (x axis label) und `ylab` (y axis label) mit weiteren `+`-Zeichen anhängen, wie folgt:
+
+```{r}
+ggplot(murders) +
+  geom_text( aes( x=population, y=total, label=abb  ) ) +
+  xlab( "Einwohnerzahl" ) + ylab( "Anzahl Morde mit Feuerwaffen" ) 
+```
+
+Der folgende etwas komplexere Plot-Befehl illustriert alle Teile eines ggplot-Aufrufs:
+
+```{r}
+ggplot(murders) +
+  geom_point( aes( x=population, y=total ), col="pink" ) +
+  geom_text( aes( x=population, y=total, label=abb ), size=3.5 ) +
+  xlab( "Einwohnerzahl" ) + ylab( "Anzahl Morde mit Feuerwaffen" ) +
+  scale_x_log10()
+```
+
+Hier die Regeln, die einem ggplot-Aufruf zugrunde liegen:
+
+- Man beginnt stets mit `ggplot(tabelle)`, wobei `tabelle` die Tabelle mit den Daten ist.
+- Alle weiteren Angaben werden mit `+`-Zeichen angehängt.
+- Die Elemente, die mit `geom_` beginnen, geben an, wie die Daten zu plotten sind.
+  - `geom_point` erzeugt Punkte und benötigt dazu die Angabe der `x`- und `y`-Koordinaten
+  - `geom_text` schreibt Texte und benötigt dazu die Angabe der `x`- und `y`-Koordinaten und den zu schreibenden Text (`label`)
+  - Wir werden noch viele weitere `geom`s kennen lernen.
+  - Jedes `geom` braucht eine Liste von sog. aesthetics, wie z.B. 
+    - `x` und `y` (Koordinaten)
+    - `label` (Text)
+    - `col` (Farbe)
+    - `size` (Größe)
+    - und viele weitere
+  - Jedes `geom` enthält ein Argument, das die Form `aes(...)` hat. Innerhalb des `aes`-Elements steht, aus welchen Tabellenspalten die Daten für die aesthetics entnommen werden sollen, immer in der Form `aes( x=spalte1, y=spalte2, col=spalte3)`, d.h., links des `=` steht ein Aesthetic und rechts des `=` ein Sapltenname.
+  - Spaltennamen werden *nur* erkannt, wenn sie in einem `aes(...)` stehen.
+  - Wenn man mehrere `geom`s angibt, werden diese übereinander gezeichnet.  
+- Außer `geom`s kann man viele weitere Zusatzangaben mit `+` anfügen, z.B.
+  - `+ xlab("Beschriftung x-Achse")` oder ebenso `ylab`
+  - und viele weitere Möglichkeiten
+  
+## Ändern und Hinzufþgen von Tabellenspalten
+
+Mit dem (etwas merkwürdig benannten) Tidyverse-Verb `mutate` kann man Spalten abändern oder hinzufügen.
+Wir fügen eine Spalte `cases_per_100000` hinzu, die die Anzahl der Morde pro 100.000 Einwohner angibt:
+
+```{r}
+mutate( murders, cases_per_100000 = total / population * 100000 )
+```
+
+Wichtig: Auch nach Ausführung dieser Anweisung enthält die Tablle `murders` nur die Spalten, die sie vorher hatte. Die neue Tabelle mit der zusätzlichen Spalte wurde *nicht* in die Variable `murders` zurück geschrieben, sondern *nur* auf den Bildschirm ausgegeben.
+
+Wir müssen explizit fordern, dass das Ergebnis in eine Variable geschrieben wird:
+
+```{r}
+mutate( murders, cases_per_100000 = total / population * 100000 ) -> murders2
+```
+
+Nun hat die neue Tabelle `murders2` die zusätzliche Spalte, die alte Tabelle `murders` ist aber noch wie vorher.
+
+## Aufgabe
+
+Erzeugen Sie ein Streudiagramm, das die Mordrate (Anzahl der Morde pro 100.000 Einwohner) gegen die Einwohnerzahl aufträgt.
+
+## Pipelines
+
+Oft möchte man mehrere Tidyverse-Operationen aneinander hängen. Dazu dient der Pipe-Operator `%>%.
+
+Zum Beispiel:
+
+```{r}
+murders %>%
+mutate( cases_per_100000 = total / population * 100000 ) %>%
+arrange( -cases_per_100000 ) -> murders
+
+murders %>% head(5)
+```
+
+Hier geschieht folgendes:
+
+- Zeile 1: Die Tabelle `murders` wird heran gezogen und mit dem Pipe-Operator `%>%` zur nächsten Zeile weiter geschoben
+- Zeile 2: Die Funktion `mutate` nimmt die herein geschobene Tabelle entgegen und fügt eine Spalte `cases_per_100000` hinzu, die die aus `total` und `population` errechnete Mordrate enthält. Die neue Tabelle, mit der zusätzlichen Spalte, wird mit `%>%` zur nächsten Zeile weiter geschoben.
+- Zeile 3: Die Funktion `arrange` nimmt Tabelle aus der vorigen Zeile entgegen, sortiert sie nach der Mordrate (absteigend, da `-`) und schiebt die sortierte Tabelle mit einem `->`-Symbol zurück in die Variable `murders`. Dort wird die ursprüngliche Tabelle nun mit der neuen Tabelle (mit einer Spalte her und sortiert) überschrieben.
+- Zeile 4: Die Funktion `head` erhält die Tabelle aus der Variable `murders` reduziert sie auf ihren "Kopf" (d.h. auf die ersten 5 Zeilen), indem sie den Rest entfernt. Das Ergebnis, die gekürzte Tabelle, wird nicht weiter geschoben und daher auf dem Bildschirm ausgegeben.
+
+### Die Pipe-Syntax
+
+Das Pipe-Symbol `%>%` wird verwendet, indem man es zwischen einen Ausdruck und einen Funktionsaufruf setzt. Der Ausdruck wird dann in die Argumentliste des Funktionsaufrufs eingeschoben, und zwar auf die erste Position.
+
+Der Aufruf `a %>% f(b,c)` ist also äquivalent zum Aufruf `f( a, b, c )`.
+
+Im Beispiel oben bewirkt `murders %>% head(5)` dasselbe wie `head( murders, 5 )`.
+
+Wenn der links stehende Ausdruck nicht auf eine andere als die erste Position der Argumentliste gesetzt werden soll, kann man diese Position mit einem Punkt (`.`) markieren. `a %>% f( b, ., c)` ist also äuqivalent zu `f( b, a, c )`.
+
+## Vier Tidyverse-Verben: `mutate`, `select`, `filter` und `arrange`
+
+### mutate
+
+`mutate` fügt Spalten hinzu oder ändert sie ab. `mutate` hat stets die Form
+```r
+mutate( tabelle, spaltenname = ausdruck )
+```
+
+Dies ist (s.o.) äquivalent zu
+```r
+tabelle %>% mutate( spaltenname = ausdruck )
+```
+
+Beides fügt in der Tabelle `tabelle` eine Spalte mit namen `spaltenname` hinzu und füllt die neue Spalte mit dem Wert von `ausdruck`. Dazu muss `ausdruck` ein Vektor sein mit einem Element für jede Tabellenzeile. Alternativ kann `ausdruck` auch ein einzelner Wert (Skalar) sein, der dann in jeder Zeile wiederholt wird.
+
+Beispiel: siehe oben
+
+### select
+
+`select` wählt Spalten aus und entfernt die übrigen Spalten.
+
+Beispiel: Wir reduzieren unsere `murders`-Tabelle auf nur zwei Spalten
+
+```{r}
+murders %>% select( state, cases_per_100000 )
+```
+
+Um eine Spalte gezielt zu entfernen, stellt man ein Minus voran.
+
+Beispiel: Entferne die Spalte `abb`:
+
+```{r}
+select( murders, -abb )
+```
+
+### filter
+
+`filter` wählt Zeilen aus, die beibehalten werden sollen und entfernt die anderen. Dazu übergibt man `filter` einen logischen Ausdruck, der zu jeder Zeile angibt, ob sie beibehalten werden soll.
+
+Beispiel: Behalte alle Zeilen, in denen der Wert in der Spalte `population` unter 1,000,000 liegt:
+
+```{r}
+murders %>% filter( population < 1000000 )
+```
+
+Beispiel 2: Wir möchten nur Staaten im Westen. Behalte also alle Zeilen, in denen der die Spalte `region` den Wert `"West"` hat:
+
+```{r}
+murders %>% filter( region == "West" )
+```
+
+Denken Sie für dieses Beispiel daran, dass der Operator für einen Test auf Gleichheit `==` (mit doppeltem `=`) heißt.
+
+### arrange
+
+`arrange` sortiert die Tabelle nach den Werten in einer Spalte. Wenn man den Namen der Spalte mit `desc()` umhüllt, wird absteigend ("descending") sortiert .
+
+Beispiel
+
+```{r}
+murders %>% arrange( population )
+```
+
+### Aufgabe 1
+
+Setzten Sie R in den Anfangszustand zurück, indem Sie im Menü "Session" ersten den Menüpunkt "Clear Workspace" und dann den Menüpunkt "Restart R" auswählen. Laden Sie dann nochmals das Paket `dslab` mit der Tabelle `murders`. Verwenden Sie die o.g. Funktionen, um der Reihe nach folgende Umformungen an der Tabelle vorzunehmen:
+- Entfernen Sie alel Zeilen zu Staatem, die weniger als 1 Million Einwohner enthalten.
+- Entfernen Sie den District of Columbia. (Erinnern Sie sich an die [Liste der Vergleichsoperatoren](erste_schritte_2.html#boolsche-ausdr%C3%BCcke) von letzter Woche.)
+- Ergänzen Sie wieder die Spalte `cases_per_100000`
+- Sortieren Sie die Tabelle nach dieser Spalte.
+
+## Ein- und Ausgabe von Tabellen
+
+Wie kommen die Daten nach R? Wir betrachten verschiedene Möglichkeiten
+
+### Datenpakete
+
+Beispiel-Daten aus Kursen sind oft als Paket verfügbar, wie z.B. das `dslab`-Paket von oben.
+
+### Direkte Eingabe
+
+Wir können die daten auch einfach direkt eintippen, und dann daraus eine Tabelle erstellen.
+
+Beispiel: Als Teil einer ökologischen Feldstudie soll untersucht werden, ob die Wühlmäuse in Waldgebiet "Südwald" besser genährt sind als im "Ostforst". Dazu werden in beiden Waldgebieten lebensfallen aufgestellt. Die gefangenen Mäuse werden gewogen und wieder frei gelassen.
+
+Hier sind die Daten aus dem Südwald, aus denen wir mit `c` einen Vektor erstellen
+
+```{r}
+c( 124.0, 135.5, 126.0, 115.0, 109.0, 152.8, 138.2 )
+```
+
+Mit `tibble` können wir uns daraus eine Tabelle erstellen. `tibble` erwartet die Angabe der Daten als Tabellenspalten:
+`tibble( spaltenname1 = vektor1, spaltenname2 = vektor2, ... )`.
+
+Also:
+```{r}
+tibble(
+  weight = c( 124.0, 135.5, 126.0, 115.0, 109.0, 152.8, 138.2 ),
+  habitat = "Südwald"
+)
+```
+Hier haben wir zwei  Spalten angelegt. In der zweiten Spalte wurde nur ein Wert angegeben, den R dann für jede Zeile wiederholt hat.
+
+Für den Ostforst habe ich mir folgende Werte ausgedacht
+```{r}
+tibble(
+  weight = c( 99.1, 148.3, 133.4, 116.8, 134.5, 117.4, 138.4, 159.6, 119.5 ),
+  habitat = "Ostforst" )
+```
+
+Mit der Funktion `bind_rows` kann man mehrere Tabellen zu einer Tabelle zusammen setzten. `bind_rows` setzte die Tabellen
+untereinander, `bind_cols` nebeneinander.
+
+```{r}
+bind_rows(
+  tibble(
+    weight = c( 124.0, 135.5, 126.0, 115.0, 109.0, 152.8, 138.2 ),
+    habitat = "Südwald"
+  ),
+  tibble(
+    weight = c( 99.1, 148.3, 133.4, 116.8, 134.5, 117.4, 138.4, 159.6, 119.5 ),
+    habitat = "Ostforst" )
+) -> vole_data
+
+vole_data
+```
+
+## CSV-Datei
+
+Wir können diese Tabelle nun im CSV-Format abspeichern:
+
+```{r}
+write_csv( vole_data, file="vole_data.csv" )
+```
+
+Diese Datei können wir dann z.B. mit Excel einlesen. Umgekehrt können wir Excel-Tabellen im CSV-Format abspeichern und in R mit `read_csv` laden.
+
+## Reduktion mit group_by und summarise
+
+Was ist das mittlere Gewicht der Wühlmäuse in den beiden Waldgebieten?
+
+```{r}
+vole_data %>%
+group_by( habitat ) %>%
+summarise( mean(weight) )
+```
+
+Dieser Code funktioniert wie folgt:
+
+- Mit `group_by` werden die Tabellenzeilen in Gruppen aufgeteilt anhand des Werts der angegebenen Spalte(n).  Hier ist `habitat` angegeben, was zwei Werte hat, `Südwald` und `Ostforst`. Daher werden aus den Tabellen-Zeilen zwei Gruppen (Teil-Tabellen) gebildet: die Zeilen mit "Südwald" und die Zeilen mit "Ostwald".
+
+- Mit `summerise` wird dann der angegebene reduzierende Ausdruck für jede Gruppe getrennt ausgewertet.
+
+Man kann mit `summarise` auch mehr als eine Reduktion ausführen. Beispiel:
+
+```{r}
+vole_data %>%
+group_by( habitat ) %>%
+summarise( mean(weight), n() )
+```
+
+Hier haben wir nun neben `mean(weight)` nun auch noch dne Ausdruck `n()`, der einfach zählt, wie viele Zeilen in der Gruppe waren.
+
+Man kann für die so erzeugten Spalten auch Überschriften vorgeben:
+
+```{r}
+vole_data %>%
+group_by( habitat ) %>%
+summarise( 
+   average_weight = mean(weight), 
+   number_of_mice = n() )
+```
+
+### Aufgabe
+
+Teilen Sie Zeilen der `murders`-Tabelle anhand der Spalte `region` in Gruppen auf. Berechnen Sie für jede Region die Gesamt-Einwohnerzahlen, indem Sie die Werte in der Spalte `population` mit `sum` aufaddieren.
+
+Fügen Sie dann im Aufruf von `summerize` noch einen zweiten Ausdruck ein, um auch die Mord-Fallzahlen pro Region aufzuaddieren.
+
+Geben Sie den beiden neuen Spalten geeignete Namen, indem Sie die neuen Spaltennamen im `summerize`-Aufruf mit `=` vor die Ausdrücke stellen.
+
+Berechnen Sie zuletzt die Mordrate pro 100,000 Einwohner für jede Region.
+
+## Hausaufgabe
+
+Das amerikanische Center for Disease Control and Prevention (CDC) führt seit längerem alle zwei Jahre eine Erhebung zu Volksgesundheit durch, die [National Health and Nutrition Examination Survey (NHANES)](https://wwwn.cdc.gov/nchs/nhanes/Default.aspx). Die Daten sind in anonymisierter Form frei zugänglich. Hier finden Sie eine Tabelle, die ich aus einem Teil der Daten von 2017-2018 erstellt habe: [nhanes.csv](data_on_git/nhanes.csv)
+
+- Laden Sie die Tabelle mit `read_csv`.
+
+- Erstellen Sie ein Streudiagramm, indem jeder Proband / jede Probandin durch einen Punkt dargestellt wird. Die x-Achse ist das Lebensalter, die y-Achse die Körpergröße. 
+
+- Ergänzen Sie Ihren Code so, dass die Punkte in zwei verschiedenen Farben eingefärbt werden, um das Geschlecht der Person zu zeigen.
+
+- Was ist die durschnittliche Körpergröße eines erwachsenen mannes und einiger erwachsenen Frau? (Nutzen Sie `filter`, um alle minderjährigen Probanden (mit Alter unter 18) aus der Tabelle zu entfernen, gruppieren Sie dann nach Geschlecht und berechnen Sie dann die Mittelwerte von `height` in den beiden Gruppen.)
+
+- Laden Sie Ihren Code bitte auf Moodle hoch. Notieren Sie bitte unter dem Code, ob Sie den Plot generieren konnten, und geben Sie auch die beiden Mittelwerte an.

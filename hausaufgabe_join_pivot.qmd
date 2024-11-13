@@ -1,0 +1,104 @@
+---
+title: "Hausaufgabe: Table-Joining und Pivoting"
+---
+
+## Aufgabe 1
+
+Berechnen Sie nochmals, wie schon in der vorigen Hausaufgabe, die durchschnittliche Körpergröße
+der erwachsenen Probanden aus der NHANES-Studie, aufgeschlüsselt nach Ethnie und Geschlecht.
+
+Pivotieren Sie die Tabelle dann so, dass die Mittelwerte für die beiden Geschlechter nebeneinander statt untereinander stehen.
+
+## Aufgabe 2
+
+```{r echo=FALSE}
+suppressPackageStartupMessages( library( tidyverse ) )
+```
+
+In einem Experiment soll der Einfluss verschiedener Wirkstoffe auf das Wachstum von Hefezellen gemessen werden. Dazu wird eine Suspension von Hefezellen in Wasser ngesetzt. Die Suspension ist so dünn, dass sie kaum trüb erscheint. Die Suspension wird auf eine [48-Well-Platte](https://de.wikipedia.org/wiki/Mikrotiterplatte) mit verteilt; jedes Well erhält die gleiche Menge an Hefe. Mit einer 8-fach-Pipette wird in jede "Spalte" der Platte ein anderer Wirkstoff gegeben. Die folgende Tabelle gibt an, welcher Wirkstoff in welche der 8 Spalten gegeben wurde:
+
+
+```{r}
+wirkstoffe <- tibble(
+  spalte = 1:8,
+  wirkstoff = c( "Wasser", "DMSO", "Giftin", "HappyGrow", "KillEmAll", 
+                 "BoringStuff", "Boostol", "Wasser" )
+)
+wirkstoffe
+```
+<!--
+```{r}
+# Code to make data
+
+wirkstoffe$growth = c( 1, 1, .2, 3, .05, 1.2, 2, 1 )
+
+expand_grid( spalte=1:8, zeile=LETTERS[1:6] ) %>%
+left_join( wirkstoffe ) %>%
+mutate( density = round( exp( rnorm( n(), log(growth) + ifelse( zeile %in% c("A","F"), -.25, 0 ), .15 ) ), 3 ) ) %>%
+pivot_wider( id_cols = "zeile", names_from="spalte", values_from = "density") %>%
+write_csv("data_on_git/growth_example.csv")
+#ggplot +  geom_point( aes( x=wirkstoff, y=density, col=zeile %in% c("A","F") ) ) + scale_y_log10()
+```
+-->
+
+Anschließend wird in jedes Well eine für das Wachstum von Hefe geeignete Nährlösung hinzu gegeben, und die Platte dann für 3 Stunden bei 30 °C inkubiert.
+
+Dann wird die Platte in einen. sog. Plattenscannner gegeben. Ein solche Scanner beleuchtet jedes Well von unten mit Licht einer vorgegebenen Wellenlänge und misst von oben, wie viel Licht durch das Well hindurch dringen kann. Je mehr Hefezellen im Well sind, desto trüber wird die Suspension, und desto größer ist die gemessene Licht-Absorption (optische Dichte, "OD").
+
+Der Plattenscanner erzeugt diese Excel-Datei als Ergebnis: [example_plate_scan.xlsx](data_on_git/example_plate_scan.xlsx). Laden Sie die Datei mit Excel (oder einem anderen Tabellenkalkulationsprogramm) und sehen Sie sie sich an.
+
+#### Einlesen der Datei
+
+Sie können diese Datei in eine CSV-Datei umwandeln und dann in R einlesen, oder Sie verwenden die Funktion `read_excel` aus dem Paket `readxl`, die Excel-Dateien direkt einlesen kann. In beiden Fällen müssen Sie die Zeilen über der eigentlichen Datentabelle entfernen. Bei `read_xl` können Sie hierzu das optionale Argument `skip` verwenden. So liest `read_excel( "file.xls", skip=7)` die Tabelle auf dem ersten Arbeitsblatt (Sheet) der Excel-Datei `file.xls` und überspringt dabei die ersten 7 Zeilen.
+
+Die eingelesene Tabelle sollte 9 Spalten haben: 8 für die Spalten der Mikrotiterplatte und davor eine Spalte mit den Buchstaben, die die Zeilen nummerieren. Geben Sie dieser Spalte einen geeigneten Namen, z.B. `zeile`. Hierzu können Sie das Tidyverse-Verb `rename` verwenden.
+
+#### Pivotieren
+
+Pivotieren Sie die Tabelle in ein "tidy-table"-Format, d.h., sorgen Sie dafür, das jedes Well eine eigene Tabellen-Zeile hat. Sie sollten nun 3 Spalten haben, für Platten-Zeile, Platten-Spalte, und Messwert.
+
+### Streudiagramm
+
+Erzeugen Sie nun ein Streudiagramm, dass die gemessen optische Dichte für jeden Wirkstoff darstellt.
+Es könnte in etwa so aussehen:
+
+```{r echo=FALSE,message=FALSE}
+readxl::read_excel( "data_on_git/example_plate_scan.xlsx", skip=4 ) %>%
+rename( zeile=...1 ) %>%
+mutate( zeile = fct_rev(zeile) ) %>%  
+pivot_longer( -zeile, names_to="spalte", values_to = "OD" ) %>%
+mutate( spalte=as.numeric(spalte) ) %>%
+left_join( wirkstoffe ) %>%
+ggplot + ggbeeswarm::geom_beeswarm( aes( x=wirkstoff, y=OD ) ) + scale_y_log10()
+```
+Anmerkungen:
+
+- Sie müssen hierzu die Tabelle mit den Messwerten und die Tabelle mit den Wirkstoffen zusammenführen. Dabei wird Ihnen auffallen, dass der Datentyp der Tabellen-Spalten `spalte` nicht zusammen passt. Mit `mutate` und `as.numeric` oder `as.character` können Sie das beheben, indem Sie den Datentyp der Spalte in einer der beiden Tabellen ändern.
+
+- Warum ist es günstig, die y-Achse logarithmisch darzustellen?
+
+- Wenn Sie `geom_point` verwenden, werden alle Punkte zum selben Wirkstoff genau übereinander gesetzt. Ich habe hier `geom_point` durch `geom_beeswarm` (vom )aus dem Paket `ggbeeswarm`) ersetzt, da dieses geom Punkte leicht versetzt, wenn sie sonst übereinander liegen würden. Diese Art der Darstellung nennt man einen "Beeswarm-Plot".
+
+#### Mittelwerte
+
+Ermitteln Sie nun noch die Mittelwerte der OD-Werte für jeden Wirkstoff. 
+
+Nützlich wäre auch, diese Mittelwerte durch den Mittelwert für Wasser zu teilen, um leichter zu sehen, welche Wirkstoffe
+das Wachstum fördern und welche es hemmen.
+
+#### Platten-Plot
+
+Versuchen Sie nun, diesen Plot hier zu erzeugen, der die Messergebnisse im Platten-Layout darstellt:
+
+```{r echo=FALSE,message=FALSE}
+readxl::read_excel( "data_on_git/example_plate_scan.xlsx", skip=4 ) %>%
+rename( zeile=...1 ) %>%
+mutate( zeile = fct_rev(zeile) ) %>%  
+pivot_longer( -zeile, names_to="spalte", values_to = "OD" ) %>%
+ggplot + geom_tile( aes( x=spalte, y=zeile, fill=OD ), col="white", lwd=3 ) + 
+  scale_fill_viridis_c( option="A", trans="log10" ) + coord_equal()
+```
+In diesem Plot habe ich einige Feinheiten geändert, so dass ihr Plot anders aussehen könnte. Versuchen Sie,
+den Plot zu verbessern, so weit es Ihnen gelingt.
+
+Einen solchen Plot benutzt man gerne, um sicher zu stellen, dass es keine Pipetierfehler oder Randeffekte gab.
