@@ -1,0 +1,62 @@
+---
+title: "Einführendes Beispiel zum Stichproben-Mittelwert"
+---
+
+Diese Aufgabe erfodert kein 
+
+Mit dem folgenden Code reduzieren wir die NHANES-Tabelle zunächste auf nur die erwachsenen Männer, für die die Körpergröße vorliegt.
+
+```{r message=FALSE}
+suppressPackageStartupMessages(
+  library( tidyverse ) )
+
+read_csv( "data_on_git/nhanes.csv" ) %>%
+filter( age >= 18, gender=="male", !is.na(height) ) -> nhanes_men_only
+
+nhanes_men_only
+```
+
+Wir bestimmen den Mittelwert der Körpergröße aller dieser Männer
+
+```{r}
+nhanes_men_only %>% summarise( mean(height) )
+```
+Dann wählen wir mit `sample_n` 10 Zeilen *zufällig* aus. Jedesmal, wenn Sie den Code ausführen, werden andere Zeilen ausgewählt.
+
+```{r}
+nhanes_men_only %>% sample_n( 10 )
+```
+
+Bestimmen Sie mit `summarise` und `mean` den Mittelwert dieser 10 Männer.
+
+```{r}
+nhanes_men_only %>% sample_n( 10 ) %>% summarise( mean(height) )
+```
+
+Führen Sie diesen Code 15 mal aus. Notieren Sie jeweils (gerne auf Papier), wie stark der Mittelwert über die 10 Männer jeweils abweicht vom Mittelwert aus der gesamten Tabelle mit allen Männern. 
+
+Wiederholen Sie dies nun nochmals, aber ziehen Sie diesmal jeweils 100 statt nur 10 zufällig ausgewählte Zeilen. Notieren Sie wieder die Abweichungen der Stichproben-Mittelwerte vom gesamt-Mittelwert.
+
+Da wir beim zweiten mal größere Stichproben genommen haben (100 Männer statt nur 10) sollte der jeweilige Mittelwert dem "wahren" Gesamt-Mittelwert näher liegen. Ist das der Fall? Wenn ja, um welchen Faktor hat sich die "Genauigkeit" in etwa verbessert?
+
+Erinnern Sie sich an Ihre Mathe-Vorlesung. Welchen Faktor würden Sie erwarten?
+
+---
+
+Falls es Ihnen zu umständlich ist, die Werte auf Papier zu notieren, hier (für fortgeschrittene R-Nutzer), wie es mit R geht:
+
+Unser Code erzeugt eine Tabelle mit einer Spalte und einer Zeile:
+
+```{r}
+nhanes_men_only %>% sample_n( 10 ) %>% summarise( mean=mean(height) )
+```
+
+Mit `map_dfr` können wir diesen Code mehrmals (hier: 15 mal) ausführen lassen, und die 1x1-Tabellen zu einer langen Tabelle zusammen fügen lassen:
+
+```{r}
+map_dfr( 1:15, ~ { nhanes_men_only %>% sample_n( 10 ) %>% summarise( mean=mean(height) )  } )
+```
+
+Hier wurde der Code in den geschweiften Klammern 15 mal ausgeführt. Jedes mal wurde eine Tabelle mit einer Zeile erzeugt, und alle diese Tabellen wurden zu einer Tabelle mit 15 Zeilen zusammen gefügt.
+
+Nun können wir z.B. die Standardabweichung dieser 15 Werte berechnen lassen.

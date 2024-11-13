@@ -32,6 +32,8 @@ Wintersemester 2024/25
   - [Table-Joins](left_join.html)  
   - [Pivoting](pivoting.html)
   - [Hausaufgabe](hausaufgabe_join_pivot.html)
+- Histogramme und Verteilungen
+  - [Histogramme](histograms.html)
 
 ## Weitere Links
 

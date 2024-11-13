@@ -1,0 +1,156 @@
+---
+title: "Histogramme"
+format: 
+  html:
+    df-print: paged
+---
+
+### Histogramm zu Fuß
+
+In der vorigen Woche haben wir den Body Mass Index (BMI) aller erwachsenen Probanden berechnet. Hier ist die Tabelle nochmals:
+
+```{r}
+suppressPackageStartupMessages( 
+  library( tidyverse ) )
+
+read_csv( "data_on_git/nhanes.csv" ) %>%
+filter( age >= 18, !is.na(height), !is.na(weight) ) %>%
+mutate( bmi = weight / (height/100)^2 ) -> nhanes
+
+nhanes
+```
+Das letzte Mal haben wir ermittelt, welcher Anteil der Probanden Übergewichtig ist (BMI > 25). Es kann aber sinnvoll sein, sich ein genaueres Bild der *Verteilung* (engl. "distribution) der Werte machen. Hierzu dienen *Histogramme*.
+
+Der folgende Code erzeugt ein Histogramm "zu Fuss". (Später werden wir sehen, wie R das automatisch macht.)
+
+Zunächst teilen wir die BMI-Werte in "Bins" (engl. für "Eimer"). Jeder Bin gehört zu einem Werte-Bereich, z.B. haben wir ein Bin für BMI von 20-22, eines für BMI von 22-24, etc. Wir schauen zunächst, welchen Wertebereich `bmi` abdeckt:
+
+```{r}
+min( nhanes$bmi )
+max( nhanes$bmi )
+```
+
+
+Wir bilden also Bins mit der Breite 2 von 14 bis 88. Hier sind die Grenzwerte von einem Bin zum nächsten:
+
+```{r}
+seq( 14, 88, by=2 )
+```
+
+Die Funktion `cut` teilt einen vektor mit Werten in Bins ein, wenn man so einen Vektor mit Grnezen ("breaks") vorgibt:
+
+```{r}
+nhanes %>%
+mutate( bmi_bin = cut( bmi, breaks = seq( 14, 88, by=2 ) ) )
+```
+
+Nun zählen wir für jedes Bin, wie viele Probanden jeweils mit ihren BMI-Wert in den Bin fallen:
+
+```{r}
+nhanes %>%
+mutate( bmi_bin = cut( bmi, breaks = seq( 14, 88, by=2 ) ) ) %>%
+group_by( bmi_bin ) %>%
+summarise( n = n() )
+```
+Wir machen daraus ein Säulendiagramm:
+
+```{r}
+nhanes %>%
+mutate( bmi_bin = cut( bmi, breaks = seq( 14, 88, by=2 ) ) ) %>%
+group_by( bmi_bin ) %>%
+summarise( n = n() ) %>%
+ggplot +
+  geom_col( aes( x=bmi_bin, y=n ) ) +
+  # Die folgende Zeile drehtstell die Beschriftung der y-Achse senkrecht
+  theme( axis.text.x = element_text( angle = 90, vjust = 0.5, hjust=1 ) )
+```
+
+### Histogramme mit ggplot
+
+Statt `geom_col` können wir auch `geom_histogram` verwenden. Dieses `geom` erledigt das Binning für uns:
+
+```{r}
+nhanes %>%
+ggplot() + geom_histogram( aes( x=bmi ), breaks = seq( 14, 88, by=2 ) )
+```
+Der Plot hat dieselbe Form wie zuvor. Allerdings wird die x-Achse jetzt "normaler" dargestellt, und `geom_histogram` lässt,
+anders als `geom_col` keine Lücken zwischen den Säulen.
+
+Man kann auch einfach nur die Binbreite angeben, und `geom_histogram` brechenet den Rest:
+
+```{r}
+nhanes %>%
+ggplot() + geom_histogram( aes( x=bmi ), binwidth=2 )
+```
+
+Wenn man die Bins sehr breit macht, verliert man Details und verfälascht die Form der Verteilung. Hier mit Binbreite 8:
+
+```{r}
+nhanes %>%
+ggplot() + geom_histogram( aes( x=bmi ), binwidth=8 )
+```
+
+Wenn man die Binbreite hingegen zu schmal wählt, wird das Histogramm "verrauscht": Zufällige Fluktuationen, ob ein Wert in ein Bin fällt, oder in das daneben, machen es uns auch schwer, die Formd er Verteuilung gut zu erkennen. Hier mit Breite 0.4:
+
+```{r}
+nhanes %>%
+ggplot() + geom_histogram( aes( x=bmi ), binwidth=.4 )
+```
+
+Oft gibt man statt der Binbreite einfach die Anzahl der Bins an. Wenn man `geom_histogramm` gar nichts
+vorgibt, teilt es den Wertebereich immer in 30 Bins auf (`bins=30`):
+
+```{r}
+nhanes %>%
+ggplot() + geom_histogram( aes( x=bmi ) )
+```
+
+### Fläche statt Höhe
+
+Wenn man sich die Histogramme oben ansieht, bemerkt man: Es scheint eine "wahre" Form zu geben, die das Histogramm zu darzustellen "versucht". Je mehr Werte man hat, desto schmaler kann man die Bins machen, ohne dass das Histogramm verrauscht wird, und desto
+genauer kann man die "wahre Form" erkennen. 
+
+Alle Histogramem nähern dieselbe Form an, zu denselben x-Werten, aber die y-Werte sind jedesmal anders. Wenn man die Binbreite verdoppelt, verdoppeln sich auch die y-Werte, da jeder Bin nun doppelt so viele Werte einsammeln kann. 
+
+Das ist unschön, da so Histogramme mit verschiedener Binbreite nicht verglichen werden können.
+
+Die übliche Lösung ist, festzulegen, dass nicht die Höhe sondern die *Fläche* jeder Säule die Anzahl der Werte widerspiegelt, die in das Bin fallen, und zwar als Anteil an allen Werten.
+
+Anders ausgedrückt: Die y-Achse wird so skaliert, dass die Gesamt-Fläche des Histogramms 1 ist. 
+
+Dann sagt man, dass die y-Achse die "Dichte" (density) der Verteilung anzeigt. Viele Statistiker betrachten Histogramme, wie wir sie oben erzeugt haben, als "falsch" und nur Histogramme mit dichte-skalierter y-Achse als "echte" Histogramme.
+
+In `geom_histogram` gibe es eine spezielle Form, die ggplot anweist, die y-Achse nach Dichte zu skalieren:
+
+```{r}
+nhanes %>%
+ggplot() + geom_histogram( aes( x=bmi, y=after_stat(density) ), bins=30 )
+```
+
+Die Dichte-skalierte y-Achse hat mehrere Vorteile:
+
+1. Wenn man die Bin-Breite ändert, wird die Form gröber oder feiner, aber die Achse bleibt wie sie ist.
+
+2. Man kann für einen beliebigen Wertebereich an der Fläche direkt ablesen, welcher Anteil in ihn fällt.
+
+Beispiel hierzu: Welcher Anteil der Probanden hat einen BMI zwischen 30 und 40? Wenn wir im folgenden Histogramm die Fläche des hervorgehobenen Teils des Histogramms bestimmen, erhalten wir die Antwort.
+
+```{r echo=FALSE}
+nhanes %>%
+ggplot() +
+  geom_histogram( aes( x=bmi, y=after_stat(density) ), bins=60 ) +
+  geom_rect( xmin=30, xmax=40, ymin=0, ymax=1 , fill="white", alpha=.003 ) 
+```
+
+(Merken Sie sich diesen Punkt; er wird später wichtig!)
+
+3. Wenn man möchte, kann man auch Bins verschiedener Breite verwenden:
+
+```{r}
+nhanes %>%
+ggplot() +
+  geom_histogram( aes( x=bmi, y=..density.. ), 
+    breaks=c( 14, 18, 19, 20, 22, 23, 25, 27, 30, 32.5, 35, 40, 50, 65, 90 ) )
+```
+
+Das ist manchmal nützlich, um die Form dort genauer darzustellen, wo viele Daten vorliegen.
