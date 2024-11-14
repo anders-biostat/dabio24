@@ -2,7 +2,7 @@
 title: "Einführendes Beispiel zum Stichproben-Mittelwert"
 ---
 
-Diese Aufgabe erfodert kein 
+*Für diese Aufgabe sollte schnell gehen da Sie keinen Code schreiben, sondern lediglich den vorgegebene Code ausführen und sich das Ergbnis anschauen sollen.*
 
 Mit dem folgenden Code reduzieren wir die NHANES-Tabelle zunächste auf nur die erwachsenen Männer, für die die Körpergröße vorliegt.
 

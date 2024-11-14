@@ -113,6 +113,6 @@ In diesem Plot habe ich einige Feinheiten geändert, so dass ihr Plot anders aus
 
 Einen solchen Plot benutzt man gerne, um sicher zu stellen, dass es keine Pippetierfehler oder Randeffekte gab.
 
-#### Aufgabe 3: Stichproben-Mittelwert
+## Aufgabe 3: Stichproben-Mittelwert
 
 [Hier](sample_mean_intro.qmd) finden Sie eine weitere Aufgabe, die nicht zum Thema gehört, und daher auf einer separaten Seite liegt. Probieren Sie das aber bitte trotzdem, als Vorbereitung zum nächsten Thema.

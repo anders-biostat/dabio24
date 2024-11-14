@@ -72,7 +72,7 @@ gender_codes
 Nun können wir das neue Tidyverse-Verb `left_join` verwenden, um die Tabellen zusammen zu fügen:
 
 ```{r}
-left_join( demo_j_selected, gender_codes, by = c( "gender_code" = "code" ) )
+left_join( demo_j_selected, gender_codes, by = c( "gender_code" = "code" ), relationship = "many-to-one" )
 ```
 
 ## Alles zu "left_join"
@@ -117,8 +117,6 @@ Schreiben Sie aus dem Codebuch die Code-Tabelle für die Ethnien (RIDRETH3) ab. 
 
 ### Lösung
 
-*[verborgen]*
-<!--
 
 Hier ist die Code-Tabelle:
 
@@ -161,7 +159,6 @@ left_join( ethnicity_codes,
     by = c( "ethnicity_code" = "code" ), relationship="many-to-one" )
 ```
 
--->
 
 ### Alles zusammen
 
@@ -202,9 +199,6 @@ Probanden-ID-Nummer als Schlüssel verwenden.
 
 #### Lösung
 
-*[verborgen]*
-
-<!--
 Hier ist die Tabelle mit den gewünschten Spalten:
 
 ```{r}
@@ -232,7 +226,6 @@ Nun haben wir die `nhanes`-Tabelle erstellt:
 ```{r}
 nhanes
 ```
--->
 
 ## Weitere Joins
 

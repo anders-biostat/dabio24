@@ -120,7 +120,7 @@ Anders ausgedrückt: Die y-Achse wird so skaliert, dass die Gesamt-Fläche des H
 
 Dann sagt man, dass die y-Achse die "Dichte" (density) der Verteilung anzeigt. Viele Statistiker betrachten Histogramme, wie wir sie oben erzeugt haben, als "falsch" und nur Histogramme mit dichte-skalierter y-Achse als "echte" Histogramme.
 
-In `geom_histogram` gibe es eine spezielle Form, die ggplot anweist, die y-Achse nach Dichte zu skalieren:
+In `geom_histogram` gibe es eine spezielle Form, die ggplot anweist, die y-Achse nach Dichte zu skalieren. Man fügt bei `aes` hinzu: `y=after_stat(density)`:
 
 ```{r}
 nhanes %>%
@@ -149,7 +149,7 @@ ggplot() +
 ```{r}
 nhanes %>%
 ggplot() +
-  geom_histogram( aes( x=bmi, y=..density.. ), 
+  geom_histogram( aes( x=bmi, y=after_stat(density) ), 
     breaks=c( 14, 18, 19, 20, 22, 23, 25, 27, 30, 32.5, 35, 40, 50, 65, 90 ) )
 ```
 

@@ -73,10 +73,13 @@ Nun plotten wir dies:
 
 ```{r fig.height=7,fig.width=7}
 tbl %>%
+# entferne Zeilen, in denen der Text "refused" in Spalte "religion" oder "income" erscheint  
 filter( !str_detect( religion, "refused" ) ) %>%
+filter( !str_detect( income, "refused" ) ) %>%
 ggplot +
   geom_col( aes( x=income, y=percent ) ) +
   facet_wrap( ~religion ) +
+  # drehe Beschriftung der x-Achse
   theme( axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1) )
 ```
 
