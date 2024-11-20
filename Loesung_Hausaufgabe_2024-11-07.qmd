@@ -1,0 +1,148 @@
+---
+title: "Hausaufgabe vom 07.11.2024"
+format: html
+embed-resources: true
+editor: visual
+---
+
+## **Aufgabe 1**
+
+**a) Zählen Sie, wie viele Probanden in der NHANES-Tabelle größer als 190 cm sind**
+
+```{r}
+suppressPackageStartupMessages(library(tidyverse))
+
+read_csv("data_on_git/nhanes.csv") -> nhanes
+
+nhanes
+```
+
+```{r}
+nhanes %>%
+  summarise(Taller_than_sixft = sum(height > 190, na.rm=TRUE))
+```
+
+**b) Gruppieren Sie nach Geschlecht und Ethnie. Zählen Sie für jede Gruppe getrennt, wie viele Probanden insgesamt in der Gruppe sind, und wie viele über 190 cm groß sind.**
+
+```{r}
+nhanes %>%
+  group_by(gender, ethnicity) %>%
+  summarise(Taller_than_sixft = sum(height > 190, na.rm=TRUE))
+```
+
+**c) Berechnen Sie für jede Gruppe den prozentualen Anteil an Über-1.9-Meter-Probanden.**
+
+```{r}
+nhanes %>%
+  group_by(gender, ethnicity) %>%
+  summarise(
+    Subjects = n(),
+    Taller_than_sixft = sum(height > 190, na.rm=TRUE),
+    Percentage_over6ft = Taller_than_sixft/Subjects*100
+    )
+    
+```
+
+## Aufgabe 2
+
+**In der Hausaufgabe der vorigen Woche haben wir in der NHANES-Tabelle die mittlere Körpergröße, aufgeschlüsselt nach Geschlecht und Ethnie, berechnet.**
+
+```{r}
+nhanes %>%
+  group_by(gender, ethnicity) %>%
+  summarise(Avg_Height = mean(height, na.rm=TRUE))
+```
+
+**Schlüsseln Sie diesmal nach Geschlecht und Alter auf.**
+
+```{r}
+nhanes %>%
+  group_by(gender, age) %>%
+  summarise(Avg_Height = mean(height, na.rm=TRUE))
+```
+
+**Erzeugen Sie einen Plot, der die Durschnittsgröße von Frauen/Mädchen und von Männern/Jungen für jedes Lebensalter darstellt.**
+
+```{r}
+nhanes %>%
+  group_by(gender, age) %>%
+  summarise(Avg_Height = mean(height, na.rm=TRUE)) %>%
+  ggplot +
+  geom_point(aes(x = age , y=Avg_Height, col=gender)) +
+  labs(x = "Age [years]", y = "Average Height [cm]")
+```
+
+**Vielleicht hilft es, in der x-Achse des Plots hineinzuzoomen, und die Achse nur von 0 bis 30 Jahre laufen zu lassen. Googlen Sie, wie man den auf der Achse dargestellten Wertebereich (“axis limits”) ändert, wenn man “ggplot” verwendet.**
+
+```{r}
+nhanes %>%
+  group_by(gender, age) %>%
+  summarise(Avg_Height = mean(height, na.rm=TRUE)) %>%
+  ggplot + 
+  geom_point(aes(x=age, y=Avg_Height, col=gender)) +
+  scale_x_continuous(limits= c(0, 30)) + 
+  labs(x = "Age [years]", y = "Average Height [cm]")
+```
+
+## **Aufgabe 3**
+
+**Bauen Sie Schritt für Schritt eine Tidyverse-Pipeline wie folgt auf:**
+
+-   **Beginnen Sie mit der NHANES-Tabelle**
+
+-   **Entfernen Sie Probanden, wo die Körpergröße oder das Gewicht fehlt, sowie Probanden mit Alter unter 18 Jahren.**
+
+-   **Fügen Sie eine Spalte `bmi` hinzu, die den Body-Mass-Index berechnet.**
+
+```{r}
+nhanes %>%
+  filter(!is.na(height), !is.na(weight), age >= 18) %>%
+  mutate(BMI = weight/(height/100)^2)
+```
+
+-   **Erwachsene mit einem BMI über 25 gelten laut WHO-Leitlinien als übergewichtig. Bei einem BMI über 30 liegt krankhaftes Übergewicht (“Adipositas”) vor. Zählen Sie, wie viele Probanden übergewichtig sind und wie viele adipös.**
+
+    ```{r}
+    nhanes %>%
+      filter(!is.na(height), !is.na(weight), age >= 18) %>%
+      mutate(BMI = weight/(height/100)^2) %>%
+      summarise(
+        Overweight = sum(BMI > 25),
+        Obese = sum(BMI > 30)
+         )
+    ```
+
+-   **Ermitteln Sie diese Zahlen aufgeschlüsselt nach Geschlecht und Ethnie, und rechnen Sie sie in Prozent um.**
+
+    ```{r}
+    nhanes %>%
+      filter(!is.na(height), !is.na(weight), age>=18) %>%
+      mutate(BMI = weight/(height/100)^2) %>%
+      group_by(gender, ethnicity) %>%
+      summarise(
+        Subjects = n(),
+        Overweight = sum(BMI > 25),
+        Overweight_Percentage = Overweight/Subjects*100,
+        Obese = sum(BMI > 30),
+        Obese_Percentage = Obese/Subjects*100
+      ) -> nhanes_BMI_overweight
+
+    nhanes_BMI_overweight
+    ```
+
+**Ersatzergebnis: Das korrekte Ergebnis, zum Vergleichen:**
+
+```{r}
+read_csv("data_on_git/nhanes_bmi_smr.csv")
+```
+
+**Erstellen Sie nun ein Diagramm der Übergewichts-Anteile. Verwenden Sie Ethnie als x-Achse, Prozent übergewichtig als y-Achse, und stellen Sie das Geschlecht durch die Farbe dar. Ersetzen Sie dann `geom_point( aes(...) )` durch `geom_col( aes(...), position="dodge")` und dann noch `col` durch `fill`. Sie sollten ein Säulendiagramm (auch Balkendiagramm genannt, engl. *bar chart*)**
+
+```{r}
+nhanes_BMI_overweight %>%
+  ggplot +
+  geom_col(aes(x = ethnicity, y = Overweight_Percentage, fill= gender), position=position_dodge(1)) +
+  labs(y = "Percentage of Overweight Subjects")
+```
+
+### 

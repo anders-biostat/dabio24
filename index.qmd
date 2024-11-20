@@ -34,6 +34,11 @@ Wintersemester 2024/25
   - [Hausaufgabe](hausaufgabe_join_pivot.html)
 - Histogramme und Verteilungen
   - [Histogramme](histograms.html)
+  - [Verteilungen](_verteilungen.html)
+
+## Musterlösungen zu den Hausaufgaben
+- zur Hausaufgabe [vom 7.11.](Loesung_Hausaufgabe_2024-11-07.html)
+- zur Hausaufgabe [vom 24.11.](Loesung_Hausaufgabe_2024-11-14.html)
 
 ## Weitere Links
 

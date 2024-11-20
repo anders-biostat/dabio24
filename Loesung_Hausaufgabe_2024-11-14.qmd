@@ -11,7 +11,7 @@ editor: visual
 ```{r}
 suppressPackageStartupMessages(library(tidyverse))
 
-read_csv("~/Datenanalyse/HiWi WS2024-2025/nhanes.csv") %>%  
+read_csv("data_on_git/nhanes.csv") %>%  
   filter(!is.na(height), age >= 18) %>%
   group_by(gender, ethnicity) %>%
   summarise(Avg_Adult_Height = mean(height))
@@ -20,7 +20,7 @@ read_csv("~/Datenanalyse/HiWi WS2024-2025/nhanes.csv") %>%
 **Pivotieren Sie die Tabelle dann so, dass die Mittelwerte für die beiden Geschlechter nebeneinander statt untereinander stehen.**
 
 ```{r}
-read_csv("~/Datenanalyse/HiWi WS2024-2025/nhanes.csv") %>%  
+read_csv("data_on_git/nhanes.csv") %>%  
   filter(!is.na(height), age >= 18) %>%
   group_by(gender, ethnicity) %>%
   summarise(Avg_Adult_Height = mean(height)) %>%
@@ -56,7 +56,7 @@ wirkstoffe
 ```{r}
 library(readxl)
 
-read_excel("~/Datenanalyse/HiWi WS2024-2025/example_plate_scan.xlsx", skip=5) %>%
+read_excel("data_on_git/example_plate_scan.xlsx", skip=5) %>%
   rename("row"="...1") -> plate_scan
 plate_scan
 ```
@@ -147,7 +147,7 @@ plate_scan_tidy %>%
 ```{r}
 suppressPackageStartupMessages(library(tidyverse))
 
-read_csv("~/Datenanalyse/HiWi WS2024-2025/nhanes.csv") -> nhanes
+read_csv("data_on_git/nhanes.csv") -> nhanes
 
 nhanes %>%
   filter(!is.na(gender), !is.na(age), !is.na(height), gender =="male", age >= 18) -> nhanes_men_only
