@@ -1,0 +1,639 @@
+---
+title: "Verteilungen"
+---
+
+### Terminologie
+
+#### Zufallsexperiment / Zufallsereignis
+
+Eine Handlung oder ein Vorkommnis, deren/dessen Ergebnis vom Zufall bestimmt ist.
+
+Beispiele:
+
+- "Werfe zwei Würfel"
+- "Wähle eine zufällige Person aus der Liste aller Einwohner Heidelbergs"
+- "Pflanze einen Tomaten-Samen ein, lasse die Pflanze 6 Monate unter definierten Bedingungen wachsen, dünge mit Dünger X, pflücke dann eine der Tomatenfrüchte"
+
+#### Zufallsgröße
+(engl.: random variable)
+
+= ein Wert, der einen Aspekt des Ausgangs eines Zufallsexperiments beschreibt
+
+Beispiele:
+
+- zu "Werfe zwei Würfel": Summe der Augen der beiden Würfel -- eine *diskrete* Zufallsgröße: es gibt eine Liste möglicher Werte -- die Zahlen 2 bis 12, nicht aber z.B. 3,14152.
+- zu "Wähle eine zufällige Person": Körpergröße dieser Person -- eine *kontinuierliche* Zufallsgröße: innerhalb eines Wertebereichs sind alle Zwischenwerte möglich
+- zu "Pflanze eine Tomate, pflücke einen Frucht" -- Gewicht der gepflückten Frucht.
+
+#### Stichprobe und Grundgesamtheit
+(engl.: sample and population)
+
+Stichprobe: Mehrfache Wiederholung eines Zufallsexperiments.
+
+Grundgesamtheit: Die Gesamtheit aller Möglichkeiten, aus der das Ergebnis des Zufallsereignisses gezogen wird.
+
+Beispiele: 
+
+- Wähle 30 zufällige Personen aus der Liste aller Einwohner Heidelbergs. -- Diese bilden eine Stichprobe (der "Länge" 30) aus der Grundgesamtheit "alle Einwohner Heidelbergs".
+
+- Lasse 40 Tomatensamen zu Pflanzen heranwachsen. -- Diese bilden eine Stichprobe aus der (abstrakten) Grundgesamtheit aller theoretisch möglichen Tomatenpflanzen, die unter den bezeichneten Bedingungen aus Samen wachsen könnten.
+
+- Werfe 2 Würfel 1000 mal. -- Auch hier ist die Grundgesamtheit abstrakt: nämlich die unendlich vielen Würfe, die man in unendlciher Zweit drchführen könnte.
+
+
+#### Wahrscheinlichkeits-Verteilung
+
+(engl.: probability distribution)
+
+= Angabe der Wahrscheinlichkeiten aller möglichen Werte einer Zufallsgröße.
+
+Beispiel 1 (diskrete Zufallsgröße): Wahrscheinlichkeitsverteilung für die Augensumme aus zwei Würfeln
+
+```{r echo=FALSE}
+suppressPackageStartupMessages(library(tidyverse))
+set.seed(13245768)
+
+expand_grid( w1=1:6, w2=1:6 ) %>%
+group_by( Augensumme = w1+w2 ) %>%
+summarise( Wahrscheinlichkeit = sprintf( "%d/36 = %.3f", n(), n()/36 ) )
+```
+
+Beispiel 2 (kontinuierliche Zufallsgröße): Körpergröße einer zufällig ausgewählten erwachsenen Person
+
+Was ist die Wahrscheinlichkeit, des die Person genau 180,00000... cm groß ist? Natürlich 0.
+
+Man kann nur fragen: Was ist die Wahrscheinlichkeit, dass die Körpergröße zwischen $a$ und $b$ liegt?
+
+### Wahrscheinlichkeits-Dichte
+
+( engl.: probability density)
+
+Sei $X$ die Zufallsgröße "Körpergröße" einer zufällig ausgewählten erwachsenen Person.
+
+Die Wahrscheinlichkeitsverteilung wird durch eine *Dichtefunktion* (density function) beschrieben, die z.B. so aussehen könnte:
+
+```{r echo=FALSE}
+xg <- seq( 100, 220, l=1000 )
+plot( xg, dnorm( xg, 171, 10 ), type="l", xlab="Körpergröße X", ylab="Wahrscheinlichkeitsdichte" )
+abline(h=0)
+```
+
+Die Wahrscheinlichkeit, dass die Körpergröße X der zufällig ausgewählten Person zwischen $a$ und $b$ liegt, kann dann abgelesen werden wie folgt: Zeichne bei $x=a$ und $x=b$ senkrechte Linien, bestimme dann die Fläche, die zwischen den Linien und unter der Kurve liegt. Also:
+$$\operatorname{Prob}(a < X < b ) = \int_a^bf(x)\mathrm{d}x$$
+
+Wenn $a$ und $b$ so nah aneinander liegen, dass $f(a)\approx f(b)$, dann kann man auch schreiben:
+$$\operatorname{Prob}(a < X < b ) \approx (b-a) f(a) \approx (b-a) f(b) $$
+
+#### Schätzung der Wahrscheinlichkeits-Verteilung
+
+##### diskrete Verteilung
+
+Wiederhole das Zufallsexperiment sehr oft, bestimme für jeden möglichen Wert, welcher Anteil der Würfe zu diesem Wert geführt hat. Dies ist die bestmöglichste Schätzung für die Wahrscheinlichkeit dieses Werts.
+
+Beispiel: Werfe die zwei Würfel 1000 mal, zähle, wie oft jede Augensumem erscheint, teile die Anzahlen durch 10000. Diese Häufigkeiten (*frequencies*) sind dann Schätzwerte (*estimates*) für die Wahrscheinlichkeiten.
+
+##### kontinuierliche Verteilung
+
+Wiederhole das Zufalslexperiment sehr oft, zeichne dann ein Histogramm. Das Histogramm ist eine Schätzung für die Dichtefunktion. Eventuell kann man das Histogramm noch glätten.
+
+
+(Anmerkung: Der Begriff "Schätzung" (estimation) bedeutet in der Statistik *nicht*, dass man grob oder ungefähr zu arbeiten. Es bedeutet vielmehr, dass man Eigenschaften der Grundgesamtheit aus einer Stichprobe bestimmt. Da die Stichprobe zufällig ist, kann der Wert nie exakt richtig sein, und daher verwendet man den Begriff "Schätzung".)
+
+### Einige Histogramme
+
+```{r message=FALSE}
+read_csv( "data_on_git/nhanes.csv" ) %>%
+filter( age >= 18, !is.na(height), !is.na(weight) ) %>%
+mutate( bmi = weight / (height/100)^2 ) -> nhanes_adults
+```
+
+BMI der erwachsenen NHANES-Probanden:
+
+```{r}
+nhanes_adults %>%
+ggplot + 
+  geom_histogram(aes( x=bmi, y=after_stat(density) ), bins=50 ) 
+```
+
+Körpergröße, getrennt für Frauen und Männer:
+
+```{r}
+nhanes_adults %>%
+ggplot + 
+  geom_histogram(aes( x=height, y=after_stat(density) ), bins=40 ) + 
+  facet_grid(rows="gender")
+```
+
+Körpergröße, beide Geschlechter vermischt
+
+```{r}
+nhanes_adults %>%
+ggplot + 
+  geom_histogram(aes( x=height, y=after_stat(density) ), bins=40 ) 
+```
+
+konstruierte bimodale Verteilung:
+
+```{r}
+hist( c( rnorm(1000, 0, 1 ), rnorm(2000, 4, 1 )), 30 )
+```
+
+### Beschreibung von Verteilungen
+
+Verteilungen beschribt man oft durch Lage, Breite und "Form".
+
+Die Lage wird quantifiziert z.B. durch
+
+- Mittelwert (mean)
+- Median (median)
+- Mode (mode)
+
+Die Breite (oder besser: Variabilität oder Dispersion) wird quantifiziert z.B. durch
+
+- Varianz (variance)
+- Standardabweichung (standard deviation)
+- median absolute deviation from median (MAD)
+- Spanne (range)
+
+Die Form lässt sich schlecht in einer Zahl quantifizieren. Es gibt aber Werte, die Aspekte der Form beschreiben, z.B. Schiefe (skew) und Kurtose (kurtosis).
+
+### Statistische Tests
+
+Betrachte folgende Zufallsexperimente:
+
+- A: Setze einen Tomatensamen, lasse die Pflanze 5 Monate wachsen. Zufallsvariable: A is das Gesamtgewicht aller Früchte der Pflanze
+- B: dasselbe, aber während des Wachstums wird die Substanz X ins Gießwasser gegeben. Zufalsvariable: B, ebenso Gesamtgewicht aller Früchte
+
+Wir möchten wissen, ob die Substanz X einen Einfluss auf den Wert der Zufallsvariable hat, ob also die Verteilung von B anders ist als die von A.
+
+Verteilungen direkt zu vergleichen ist schwierig.
+
+Deshalb beschränken wir uns darauf, einen Verteilungsparameter zu vergleichen, meist den Mittelwert (Erwartungswert).
+
+Wir fragen also: Ist der Erwartungswert (d.h., der Mittelwert in der Grundgesamtheit) in B anders als in A?
+
+Dazu erstellen wir zwei Stichproben von B und A, indem wir jeweils mehrere Pflanzen wachsen lassen. Dann vergleichen wir die Stichproben-Mittelwerte. 
+
+Können wir aus den Stichproben-Mittelwerte auf die Grundgesamtheits-Mittelwerte (Erwartungswerte) schließen?
+
+Dazu müssen wir wissen: Wie nah liegen die Stichproben-Mittelwerte den Erwartungswerten? Wie "genau" sind sie?
+
+#### Beispiel:
+
+Kinder im Alter von 10 Jahren: gibt es einen Unterschied in der Körpergröße zwischen Jungen und Mädchen?
+
+Vergleich der Histogramm:
+
+```{r message=FALSE}
+read_csv( "data_on_git/nhanes.csv" ) %>%
+filter( age == 10, !is.na(height) ) -> nhanes_10_year_olds
+
+nhanes_10_year_olds %>%
+ggplot() + geom_histogram( aes( x=height, y=after_stat(density) ), bins=20 ) +
+  facet_grid( rows="gender" )
+```
+
+Alternatvie Darstellung mit Beeswarm-Plots:
+
+```{r message=FALSE}
+nhanes_10_year_olds %>%
+ggplot() + ggbeeswarm::geom_beeswarm( aes( x=gender, y=height ) )
+```
+
+Bekanntlich klärt man solche Unterschiede durch einen *t-Test*:
+
+```{r message=FALSE}
+t.test( height ~ gender, nhanes_10_year_olds )
+```
+
+Was aber macht der t-Test? Dazu brauchen wir noch einige Grundlagen.
+
+### Normalverteilung
+
+Wiederholung von oben: Verteilungen beschreibt man oft durch Lage, Breite und "Form".
+
+Eine Form ist besonders: Jede Verteilung, deren Dichtefunktion man durch Verschiebung oder Skalierung (d.h., Stauchen/Strecken) in die Form der Funktion $e^{-x^2}$ bringen kann, heißt *Normalverteilung* (normal distribution).
+
+Die Funktion $e^{-x^2}$ beschreibt die Form der "Gaußschen Glockenkurve". 
+
+In der Form
+$$f(x) = \frac{1}{\sqrt{2\pi}}e^{-x^2/2}$$
+heißt die Funktion "*Standard*-Normalverteilung" (standard normal distribution), weil sie den Mittelwert 0 und die Standardabweichung 1 hat.
+
+Ihr Graph sieht so aus:
+```{r}
+x <- seq( -4, 4, length.out=1000 )
+plot( x = x, y = dnorm( x ), type="l" )   # type 'l' is 'line'';  dnorm(x) ste'
+```
+
+Die Funktion `dnorm(x)` steht hier kurz für die eben genannte Funktion, also für `exp(-x^2/2)/sqrt(2*pi)`.
+
+Die allgemeine Normalverteilung, mit Mittelwert $\mu$ und Standardabweichung $\sigma$ hat die Dichte
+
+$$f(x) = \frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{(x-\mu)^2}{2\sigma^2}}$$
+und kann durch `dnorm( x, mu, sigma )` berechnet werden.
+
+Beispiel: Eine Normalverteilung, die dem Histogramm der Körpergröße der Männer (s.o.) sehr ähnlich ist
+
+```{r}
+x <- seq( 150, 200, length.out=1000 )
+plot( 
+  x = x, 
+  y = dnorm( x, mean=178, sd=7 ), 
+  type = "l" )
+```
+
+### Der zentrale Grenzwertsatz
+
+<div class="imp">Zentraler Grenzwertsatz (central limit theorem): Wenn man mehrere voneinander unabhängige Zufallsgrößen aufaddiert, dann ist die Verteilung der Summe einer Normalverteilung ähnlich. Je mehr Werte man aufaddiert, desto genauer entspricht die Form der Verteilung der Gaußschen Glockenform.</div>
+
+(Umgenau zu sein: Der Satz gilt nur, wenn die Zufallsgrößen alle endliche Varianz haben. Das ist aber normalerweise immer der Fall.)
+
+### Illustration des zentralen Grenzwertsatzes:
+
+Das Histogramm der BMI-Werte (s.o.) unterscheidet sich deutlich von einer Normalverteilung: Es ist asymmetrisch, nämlich "rechtsschief" (right-skewed).
+
+Wir wählen 5 Probanden zufällig aus und addieren ihre BMI-Werte (5 unabhängige Zufalslgrößen):
+
+```{r}
+nhanes_adults %>% 
+sample_n( 5 ) %>%
+summarise( bmi_sum = sum(bmi) ) 
+```
+
+Das machen wir 1000 mal:
+
+```{r}
+map_dfr( 1:1000, ~{
+  nhanes_adults %>% 
+  sample_n( 5 ) %>%
+  summarise( bmi_sum = sum(bmi) ) } ) 
+```
+
+Hier ist das Histogramm dieser Werte:
+
+```{r}
+map_dfr( 1:1000, ~{
+  nhanes_adults %>% 
+  sample_n( 5 ) %>%
+  summarise( bmi_sum = sum(bmi) ) } ) %>%
+ggplot + geom_histogram( aes( x=bmi_sum, y=after_stat(density) ), bins=30 )
+```
+
+Dasselbe, mit Base-R- statt Tidyverse-Code:
+
+```{r}
+replicate( 1000, sample( nhanes_adults$bmi, 5 ) ) %>% hist()
+```
+
+Hier Histogramme für verschiedene Stichproben-Längen:
+
+```{r fig.width=7, fig.height=10}
+map_dfr( c(1,2,3,5,10,30,100, 300), \(k)
+  tibble( 
+    bmi_sum = replicate( 30000, sum( sample( nhanes_adults$bmi, k ) ) ), 
+    g = { if(k==1) "single BMI value" else str_glue( "sum of {k} BMI values" ) } ) ) %>%
+mutate( g = fct_inorder(g) ) %>%  
+ggplot() + geom_histogram( aes(x=bmi_sum,y=after_stat(density)), bins=30 ) +
+    facet_wrap( ~g, scales = "free", ncol=2  )
+```
+
+Wir sehen: Je mehr Werte wir aufaddieren, desto "normaler" wird die Verteilung. Die ursprüngliche Form verschwindet.
+
+Zusammengefasst:
+
+<div class="imp">Summen von vielen unabhängigen Zufallszahlen sind normalverteilt. Um ihre Verteilung zu beschreiben genügt daher die Angabe von Mittelwert und Standardabweichung. Die Form ist immer dieselbe.</div>
+
+### Normalverteilung in Daten
+
+Das Histogramm der Körpergröße der erwachsenen Männer (und ebenso das für die Frauen) scheint normalverteilt zu sein.
+
+Wir bestimmen Mittelwert und Standardabweichung der Werte und vergleichen mit einer Normalverteilung mit denselben Parametern:
+
+```{r}
+nhanes_adults %>%
+filter( gender=="male" ) %>%
+summarise( mean(height), sd(height) )
+```
+
+Wir zeichnen die Dichtefunktion einer Normalverteilung mit diesen Werten:
+
+```{r}
+tibble( height = seq( 150, 200, by=.02 ) ) %>%
+mutate( density = dnorm( height, mean=173.47, sd=7.68 ) ) -> men_height_norm_dens
+
+men_height_norm_dens %>%
+ggplot + geom_line( aes( x=height, y=density ), col="purple" )
+```
+Wir legen den Plot dieser Dichte über das Histogramm von oben
+
+```{r}
+ggplot(NULL) +
+  geom_histogram( aes( x=height, y=after_stat(density) ),
+        data = { nhanes_adults %>% filter( gender=="male" ) } ) +
+  geom_line( aes( x=height, y=density ), col="purple",
+        data = men_height_norm_dens ) 
+```
+
+Die Körpergröße scheint tatsächlich normalverteilt zu sein.
+
+Das bedeutet: Die Körpergröße eines Menschen ist die *Summe* vieler voneinander unabhängige zufälliger Einflüsse.
+
+Dass eine Messgröße ein Phänomen darstellt, dass von vielen Einflüssen bestimmt ist, kommt sehr häufig vor. Wenn diese Einflüsse zu einem hinreichendem Grad voneinander unabhängig sind, und wenn die Messgröße die Summe ihrer Wirkungen darstellt, dann können wir Normalverteilung erwarten. Das ist sehr häufig der Fall.
+
+Wenn die Messgröße das *Produkt* vieler unabhängiger Einflüsse ist, ist ihr Logarithmus normalverteilt.
+
+### Die 68-95-99.7-Regel
+
+Wenn man einen Wert aus einer Standard-Normalverteilung zieht, liegt dieser
+
+- zwischen -1 und 1 mit 68% Wahrscheinlichkeit
+- zwischen -2 und 2 mit 95% Wahrscheinlichkeit
+- zwischen -3 und 3 mit 99.7% Wahrscheinlichkeit
+
+Diese Werte kann man mit R wir folgt berechnen:
+
+```{r}
+pnorm(1) - pnorm(-1)
+pnorm(2) - pnorm(-2)
+pnorm(3) - pnorm(-3)
+```
+
+(Die Funktion `pnorm` berechnet die kumulative Dichtefuntion (cumulative density function, CDF) der (Standard-)Normalverteilung, d.h., das Integral $\text{Prob}(X<x)=\int_{-\infty}^x \frac{e^{-x'^2/2}}{\sqrt{2\pi}}\text{d}x'$ -- also, die Wahrscheinlichkeit, das ein aus einer Standard-Normalverteilung gezogener Wert kleiner als x ist.)
+
+Daher gilt:
+
+<div clas="imp">
+Die Wahrscheinlichkeit, dass ein Wert, der aus einer Normalverteilung gezogen wird,
+
+- nicht mehr als 1 Standardabweichung vom Mittelwert abweicht, ist 68%.
+- nicht mehr als 2 Standardabweichungen vom Mittelwert abweicht, ist 95%.
+- nicht mehr als 3 Standardabweichungen vom Mittelwert abweicht, ist 99,7%.
+</div>
+
+Beispiel: In Deutschland sind Männer im Mittel 1,78 groß. Die Standardabweichung der Verteilung der Körpergrößen beträgt 7 cm. Also sind 95% aller Männer in Deutschland zwischen 178 cm - 2\*7cm = 164 cm und 178 cm + 2\*7cm = 192 cm groß. Nur 2.5% der Männer sind größer als 192 cm.
+
+### Standardfehler des Mittelwerts
+
+Es gilt:
+
+- Der Erwartungswert (Mittelwert) der Summe ist die Summe der Erwartungswerte der aufaddierten Zufallsgrößen.
+- Dasselbe gilt für die Varianz.
+
+
+<div class="imp">
+Satz: Eine Zufallsgröße habe eine Verteilung mit Erwartungswert $\mu$ und Standardabweichung $\sigma$. Eine Stichprobe der Länge $n$ werde gezogen, d.h., es liegen $n$ Werte vor. Der Mittelwert $\hat\mu$ dieser $n$ Werte kann auch als Zufallsgröße aufgefasst werden. Für die Verteilung der Zufallsgröße "Stichproben-Mittlwert" gilt:
+
+1. Der Erwartungswert von $\hat\mu$ ist $\mu$, der Erwartungswert der ursprünglichen Verteilung.
+2. Die Standardabweichung von $\hat\mu$ ist $\sigma/\sqrt{n}$. Diesen Wert nennt man den "Standardfehler des Mittelwerts" (standard error of the mean, SEM).
+3. Für hinreichend großes $n$ ist die Verteilung von $\hat\mu$ näherungsweise eine Normalverteilung.</div>
+
+Begründung: 
+
+- 1. klar
+- 2. Die Summe der Zufallszahlen hat die Varianz $n\sigma^2$ (denn Varianz addiert sich) und somit die Standardabweichung $\sqrt{n}\sigma$. Die Summe wird durch $n$ geteilt, um $\hat\mu$ zu erhalten. Die Stanardabweichung wird also auch durch $n$ getilt, und man erhält $\sigma/\sqrt{n}$.
+- 3. Die Summe der Einzelwerte ist nach zentralem Grenzwertsatz näherungsweise normalverteilt, wenn $n$ groß genug ist. Wenn man die Sumem durch $n$ teilt, um den Mittelwert zu erhalten, bleibt die Verteilung normal.
+
+### Demonstration: Standardfehler des Mittelwerts
+
+Wir betrachten die erwachsenen Probanden von NHANES als Grundgesamtheit. Mittelwert und Standardabweichung der BMI-Werte sind:
+
+```{r}
+nhanes_adults %>%
+summarise( mean(bmi), sd(bmi) )
+```
+
+Wie genau können wir diesen Mittelwert erhalten aus einer Stichprobe von $n=10$ Probanden?
+
+Ein einzelner Versuch:
+
+```{r}
+nhanes_adults %>%
+sample_n(10) %>%
+summarise( mean(bmi) )
+```
+
+oder kürzer
+
+```{r}
+mean( sample( nhanes_adults$bmi, 10 ) )
+```
+
+Wir wiederholen nun 1000 mal diesen Versuch
+
+```{r}
+replicate( 1000, mean( sample( nhanes_adults$bmi, 10 ) ) ) -> bmi_means_from_10_subjects
+
+str( bmi_means_from_10_subjects )
+```
+
+Hier ist ein Histogramm dieser Werte:
+
+```{r}
+hist( bmi_means_from_10_subjects )
+```
+
+Hier die Standardabweichung:
+
+```{r}
+sd( bmi_means_from_10_subjects )
+```
+
+Der Mittelwert der BMI-Werte von 10 Probanden weicht also typischerweise etwa um 2.4 vom wahren Wert 29.7 ab. 
+
+Nach SEM-Formel erwarten wir $7.44/\sqrt{10}$, da die STandardabweichungd er BMI-Werte 7.44 beträgt
+
+```{r}
+sd( nhanes_adults$bmi ) / sqrt(10)
+```
+
+Dies ermöglicht uns, abzuschätzen, wie genau ein Stichproben-Mittelwert am "wahren" Mittelwert der Grundgesamtheit liegt.
+
+Aber: Um die SEM-Formel anwenden zu können, müssen wir die *wahre* Standardabweichung in der Grundgesamtheit kennen. Wir haben aber nur die Standardabweichung der Stichprobe.
+
+Wie nah liegt die Standardabweichung einer Stichprobe von 10 Probanden am wahren Wert? Hier ist die Verteilung der Stichproben-Standardabweichungen:
+
+```{r}
+replicate( 1000, sd( sample( nhanes_adults$bmi, 10 ) ) ) %>% hist()
+```
+
+Schätzungen von Standardabweichungen aus Stichproben sind recht ungenau, solange die Stichprobe nicht wirklich groß ist.
+
+Daher ist auch der SEM kein zuverlässiges Maß für die Genauigkeit eines Mittelwertes, wenn er auf einer solchen Schätzung beruht.
+
+### Vergleich zweier Mittelwerte
+
+Um sagen zu können, dass sich die Mittelwerte zweier Verteilungen unterscheiden, muss der Unterschied der Mittelwert groß sein im Vergleich zu ihrer Ungenauigkeit. 
+
+Für große Stichproben kann man den SEM verwenden. Um aber die Unsicherheit im Nenner des SEMs zu berücksichtigen, muss man den Wert der Ungenauigkeit geeignet vergrößern. Die Studentsche t-Verteilung berechnet diesen Faktor; der t-Test nutzt ihn.
+
+Bevor wir den t-Test näher untersuchen, reden wir über Konfidenzintervalle.
+
+### Konfidenzintervalle
+
+Definition: Ein 95%-Konfidenzintervall (95%-KI) zu einem statistischen Schätzwert ist ein Intervall um diesen Schätzwert, dass nach einer Vorschrift konstruiert wurde, die folgende Eigenschaft hat: In mindestens 95% der Anwendungen erzeugt die Vorschrift ein Intervall, dass den wahren Wert enthält.
+
+WIr probieren dies aus:
+
+Wir ziehen 15 Werte aus einer Normalverteilung mit Mittelwert 173.5 und Standardabweichung 7.7:
+
+```{r}
+rnorm( 15, mean=173.5, sd=7.7 ) -> x
+x
+```
+
+(Das ist in etwa dasselbe, wie 15 Männer aus der NHANES-Tabelle zufällig auszuwählen und ihre Körpergröße zu betrachten.)
+
+Wir bestimmen den Mittelwert:
+
+```{r}
+mean(x)
+```
+
+Die Funktion `t.test` kann nicht nur genutzt werden, um den den t-Test durchzuführen, sondern auch, um das durch die t-Verteilung bestimmte 95%-Konfidenzintervall zu berechnen:
+
+```{r}
+t.test(x)
+```
+
+In der Ausgabe ignorieren wir p-Wert und sonstige daten zum Test (da wir keinen Test durchführen) und betrachten nur das 95%-KI. Es enthält (diesmal) den wahren Wert 173.5.
+
+Wenn wir diesen Code sehr oft ausführen, wird das KI in 95% der Fälle den wahren Wert enthalten.
+
+Beispiel 1: Alle Zuhörer im Hörsaal führen folgenden Code aus:
+
+```{r}
+rnorm( 15, mean=10, sd=3 ) -> x
+x
+t.test(x)
+```
+
+Dann zählen wir (per Handzeichen) bei wem das KI den wahren Wert 10 enthält und bei wem nicht. In etwa 5% sollten ein KI erhalten, dass den wahren Wert nicht überdeckt.
+
+Beispiel 2: Wir lassen R den Code 1000 mal ausführen:
+
+```{r}
+map_dfr( 1:1000, ~{
+  rnorm( 15, mean=10, sd=3 ) -> x
+  t.test( x ) -> result
+  tibble( 
+    ci_lo = result$conf.int[1],
+    mean = mean(x),
+    ci_hi = result$conf.int[2] )
+}) -> tbl
+
+tbl
+```
+
+Wie oft war die Untergrenze des KIs über 10 oder die Obergrenze unter 10?
+
+```{r}
+tbl %>%
+summarise( 
+  n_non_covering = sum( ci_lo > 10 | ci_hi < 10 ),
+  n = n() )
+```
+
+### Fehlerbalken
+
+Zurück zur Körpergröße der 10-jährigen Kinder
+
+Wir berechnen Mittelwert und 95%-KI der Körpergröße der 10jährigen Jungen:
+
+```{r}
+nhanes_10_year_olds %>%
+filter( gender=="male" ) %>%
+pull( height ) %>%
+t.test()
+```
+
+Wir können das auch für beide Geschlechter zugleich machen, indem wir nach `gender` gruppieren. Leider können wir `t.test` nicht direkt mit `summerise` verwenden, da `summerise` nur mit Ausdrücken funktioniert, die zu Skalaren oder Tabellenzeilen evaluieren. Die Funktion `broom::tidy` dient als "Adapter": Sie nimmt die Ausgabe von `t.test` (oder einer anderen Funktion für statische Tests) und wandelt sie in eine Form um, mit der `summerise` arbeiten kann:
+
+```{r}
+nhanes_10_year_olds %>%
+group_by( gender ) %>%
+summarise( 
+  broom::tidy( t.test(height) ), 
+  n = n() ) -> means_with_ci
+
+means_with_ci
+```
+
+Her ist `estimate` der Mittelwert, `conf.low` und `conf.high` sind die Grenzen des 95%-KI. Die übrigen Spalten (`p.value` etc) sind hier unsinnig, da wir `t-Test`t.test` nicht für einen Test verwendet haben.
+
+Wir erstellen nochmal den Beeswarm-Plot von oben und fügen *Fehlerbalken* (error bars) hinzu:
+
+```{r}
+nhanes_10_year_olds %>%
+ggplot( aes( x=gender) ) +
+  ggbeeswarm::geom_beeswarm( aes( y=height ) ) +
+  geom_errorbar( aes( ymin = conf.low, ymax=conf.high ), 
+      col="magenta", width=.3,
+      data = means_with_ci )
+```
+
+Wir können noch eine Linie am Mittelwert einfügen:
+
+```{r}
+nhanes_10_year_olds %>%
+ggplot( aes( x=gender) ) +
+  ggbeeswarm::geom_beeswarm( aes( y=height ) ) +
+  geom_errorbar( aes( ymin = conf.low, ymax=conf.high ), 
+      col="magenta", width=.3,
+      data = means_with_ci ) +
+  geom_errorbar( aes( ymin = estimate, ymax=estimate ), 
+      col="magenta", width=.15,
+      data = means_with_ci )
+```
+
+### SEM statt KI
+
+Besonders in der Biologie ist es beliebt, statt des 95%-KIs den SEM einzutragen. 
+
+Wir berechnen zunächst Mittelwerte und SEMs:
+
+```{r}
+nhanes_10_year_olds %>%
+group_by( gender ) %>%
+summarise(
+  mean = mean(height),
+  sd = sd(height),
+  n = n(),
+  sem = sd/sqrt(n)
+) -> means_with_sem
+
+means_with_sem
+```
+
+```{r}
+nhanes_10_year_olds %>%
+ggplot( aes( x=gender) ) +
+  ggbeeswarm::geom_beeswarm( aes( y=height ) ) +
+  geom_errorbar( aes( ymin = mean-sem, ymax=mean+sem ), 
+      col="magenta", width=.3,
+      data = means_with_sem ) +
+  geom_errorbar( aes( ymin = mean, ymax=mean ), 
+      col="magenta", width=.15,
+      data = means_with_sem )
+
+```
+
+Die Verwendung solcher Fehlerbalken ist allerdings evtl. irreführend, denn die Überdeckungswahrscheinlichkeit ist geringer als man erwarten würde.
+
+
+Die folgende Kurve zeigt die Wahrscheinlichkeit, dass ein SEM-Fehlerbalken den wahren Wert einschließt:
+
+```{r}
+tibble( n=2:1000 ) %>% 
+mutate( prob = 1-2*pt(-1,n) ) %>%    #(not obvious)
+ggplot() + 
+  geom_point( aes( x=n, y=100*prob ) ) + ylim(50,80) +
+  xlab("Anzahl Werte") + ylab("Überdeckungs-Wahrscheinlichkeit [%]") +
+  scale_x_log10(
+    breaks = c(1, 2, 3, 5, 10^(1:5)),
+    minor_breaks = c(1:9, 10^(1:5) %o% c(1:9))
+  )
+```
+
+
+
