@@ -1,0 +1,230 @@
+---
+title: "Hausaufgabe vom 14.11.2024"
+format: html
+editor: visual
+---
+
+## Aufgabe 1
+
+**Berechnen Sie nochmals, wie schon in der vorigen Hausaufgabe, die durchschnittliche Körpergröße der erwachsenen Probanden aus der NHANES-Studie, aufgeschlüsselt nach Ethnie und Geschlecht.**
+
+```{r}
+suppressPackageStartupMessages(library(tidyverse))
+
+read_csv("~/Datenanalyse/HiWi WS2024-2025/nhanes.csv") %>%  
+  filter(!is.na(height), age >= 18) %>%
+  group_by(gender, ethnicity) %>%
+  summarise(Avg_Adult_Height = mean(height))
+```
+
+**Pivotieren Sie die Tabelle dann so, dass die Mittelwerte für die beiden Geschlechter nebeneinander statt untereinander stehen.**
+
+```{r}
+read_csv("~/Datenanalyse/HiWi WS2024-2025/nhanes.csv") %>%  
+  filter(!is.na(height), age >= 18) %>%
+  group_by(gender, ethnicity) %>%
+  summarise(Avg_Adult_Height = mean(height)) %>%
+  pivot_wider(id_cols="ethnicity", names_from="gender", values_from="Avg_Adult_Height")
+```
+
+## Aufgabe 2
+
+**In einem Experiment soll der Einfluss verschiedener Wirkstoffe auf das Wachstum von Hefezellen gemessen werden. Dazu wird eine Suspension von Hefezellen in Wasser angesetzt. Die Suspension wird auf eine [48-Well-Platte](https://de.wikipedia.org/wiki/Mikrotiterplatte) verteilt; jedes Well erhält die gleiche Menge an Hefe. Anschließend werden die Wirkstoffe in die Wells gegeben. Jeweils 6 Wells, nämlich die, die in derselben “Spalte” der Platte liegen, erhalten denselben Wirkstoff. Die folgende Tabelle gibt an, welcher Wirkstoff in welche der 8 Spalten gegeben wurde:**
+
+```{r}
+wirkstoffe <- tibble(
+  spalte = 1:8,
+  wirkstoff = c( "Wasser", "DMSO", "Giftin", "HappyGrow", "KillEmAll", 
+                 "BoringStuff", "Boostol", "Wasser." )
+)
+
+wirkstoffe
+```
+
+**Anschließend wird in jedes Well eine für das Wachstum von Hefe geeignete Nährlösung hinzu gegeben, und die Platte dann für 3 Stunden bei 30 °C inkubiert.**
+
+**Dann wird die Platte in einen. sog. Plattenscannner gegeben. Ein solche Scanner beleuchtet jedes Well von unten mit Licht einer vorgegebenen Wellenlänge und misst von oben, wie viel Licht durch das Well hindurch dringen kann. Je mehr Hefezellen im Well sind, desto trüber wird die Suspension, und desto größer ist die gemessene Licht-Absorption (optische Dichte, “OD”).**
+
+**Der Plattenscanner erzeugt diese Excel-Datei als Ergebnis: [example_plate_scan.xlsx](https://papagei.bioquant.uni-heidelberg.de/simon/dabio24/data_on_git/example_plate_scan.xlsx). Laden Sie die Datei mit Excel (oder einem anderen Tabellenkalkulationsprogramm) und sehen Sie sie sich an.**
+
+### **Einlesen der Datei**
+
+**Sie können diese Datei in eine CSV-Datei umwandeln und dann in R einlesen, oder Sie verwenden die Funktion `read_excel` aus dem Paket `readxl`, die Excel-Dateien direkt einlesen kann. In beiden Fällen müssen Sie die Zeilen über der eigentlichen Datentabelle entfernen. Bei `read_xl` können Sie hierzu das optionale Argument `skip` verwenden. So liest `read_excel( "file.xls", skip=7)` die Tabelle auf dem ersten Arbeitsblatt (Sheet) der Excel-Datei `file.xls` und überspringt dabei die ersten 7 Zeilen.**
+
+**Die eingelesene Tabelle sollte 9 Spalten haben: 8 für die Spalten der Mikrotiterplatte und davor eine Spalte mit den Buchstaben, die die Zeilen nummerieren. Geben Sie dieser Spalte einen geeigneten Namen, z.B. `zeile`. Hierzu können Sie das Tidyverse-Verb `rename` verwenden.**
+
+```{r}
+library(readxl)
+
+read_excel("~/Datenanalyse/HiWi WS2024-2025/example_plate_scan.xlsx", skip=5) %>%
+  rename("row"="...1") -> plate_scan
+plate_scan
+```
+
+### **Pivotieren**
+
+**Pivotieren Sie die Tabelle in ein “tidy-table”-Format, d.h., sorgen Sie dafür, das jedes Well eine eigene Tabellen-Zeile hat. Sie sollten nun 3 Spalten haben, für Platten-Zeile, Platten-Spalte, und Messwert.**
+
+```{r}
+plate_scan %>%
+  pivot_longer(cols= -row, names_to="column", values_to="OD") ->plate_scan_tidy
+
+plate_scan_tidy
+```
+
+### **Streudiagramm**
+
+**Erzeugen Sie nun ein Streudiagramm, dass die gemessen optische Dichte für jeden Wirkstoff darstellt. Es könnte in etwa so aussehen:**
+
+```{r}
+plate_scan_tidy %>%
+  transform(column=as.numeric(column)) %>%
+  left_join(wirkstoffe, by=c("column"="spalte")) %>%
+  mutate(Wirkstoff = fct_inorder(wirkstoff) ) %>%
+  ggplot +
+  geom_point(aes(x=Wirkstoff, y=OD)) +
+  scale_y_log10()
+```
+
+```{r}
+library("ggbeeswarm")
+
+plate_scan_tidy %>%
+  transform(column=as.numeric(column)) %>%
+  left_join(wirkstoffe, by=c("column"="spalte")) %>%
+  mutate(Wirkstoff = fct_inorder(wirkstoff)) %>%
+  ggplot +
+  geom_beeswarm(aes(x=Wirkstoff, y=OD)) +
+  scale_y_log10()
+```
+
+### **Mittelwerte**
+
+**Ermitteln Sie nun noch die Mittelwerte der OD-Werte für jeden Wirkstoff.**
+
+```{r}
+plate_scan_tidy %>%
+  transform(column = as.numeric(column)) %>%
+  left_join(wirkstoffe, by=c("column"="spalte")) %>%
+  mutate(Wirkstoff = fct_inorder(wirkstoff)) %>%
+  select(-column, -wirkstoff) %>%
+  group_by(Wirkstoff) %>%
+  summarise(Avg_OD = mean(OD)) -> plate_scan_avg
+
+plate_scan_avg
+```
+
+**Nützlich wäre auch, diese Mittelwerte durch den Mittelwert für Wasser zu teilen, um leichter zu sehen, welche Wirkstoffe das Wachstum fördern und welche es hemmen.**
+
+```{r}
+plate_scan_avg %>%
+  mutate(WasserAvgOD = ((Avg_OD[1] + Avg_OD[8])/2)) %>%
+  group_by(Wirkstoff) %>%
+  summarise(Avg_OD_corr = Avg_OD/WasserAvgOD)
+```
+
+### **Platten-Plot**
+
+**In diesem Plot habe ich einige Feinheiten geändert, so dass ihr Plot anders aussehen könnte. Ich habe die Punkte extra groß gemacht, damit sie wie Wells aussehen, und ich habe die y-Achse umgekehrt (weil Zeilen in Mikrotiterplatten von oben nach unten numeriert werden, ggplot die y-Achse aber von unten nach oben ansteigen lässt), die Farbskala logarithmisch gemacht, und die Palette geändert.**
+
+**Einen solchen Plot benutzt man gerne, um sicher zu stellen, dass es keine Pippetierfehler oder Randeffekte gab.**
+
+```{r}
+plate_scan_tidy %>%
+  transform(column= as.numeric(column)) %>%
+  left_join(wirkstoffe, by=c("column"="spalte")) %>%
+  mutate(Wirkstoff = fct_inorder(wirkstoff)) %>%
+  ggplot + 
+  geom_point(aes(x=Wirkstoff, y=row, col=OD), size=15) +
+  scale_y_discrete(limits = rev(unique(sort(plate_scan_tidy$row))))+
+  scale_colour_gradient(name ="OD", trans="log10",low="beige", high="brown")
+```
+
+## **Aufgabe 3: Stichproben-Mittelwert**
+
+**Mit dem folgenden Code reduzieren wir die NHANES-Tabelle zunächste auf nur die erwachsenen Männer, für die die Körpergröße vorliegt.**
+
+```{r}
+suppressPackageStartupMessages(library(tidyverse))
+
+read_csv("~/Datenanalyse/HiWi WS2024-2025/nhanes.csv") -> nhanes
+
+nhanes %>%
+  filter(!is.na(gender), !is.na(age), !is.na(height), gender =="male", age >= 18) -> nhanes_men_only
+
+nhanes_men_only
+```
+
+**Wir bestimmen den Mittelwert der Körpergröße aller dieser Männer**
+
+```{r}
+nhanes_men_only %>%
+  summarise(avg_man_height = mean(height)) -> population_mean
+
+population_mean
+```
+
+**Dann wählen wir mit `sample_n` 10 Zeilen zufällig aus. Jedesmal, wenn Sie den Code ausführen, werden andere Zeilen ausgewählt.Bestimmen Sie mit `summarise` und `mean` den Mittelwert dieser 10 Männer.**
+
+```{r}
+nhanes_men_only %>%
+  sample_n(10) %>%
+  summarise(sample_mean = mean(height))
+```
+
+```{r}
+nhanes_men_only %>%
+  sample_n(10) %>%
+  summarise(sample_mean = mean(height))
+```
+
+```{r}
+nhanes_men_only %>%
+  sample_n(10) %>%
+  summarise(sample_mean = mean(height))
+```
+
+**Mit `map_dfr` können wir diesen Code mehrmals (hier: 15 mal) ausführen lassen, und die 1x1-Tabellen zu einer langen Tabelle zusammen fügen lassen**
+
+```{r}
+map_dfr(1:15, ~{
+  nhanes_men_only %>%
+    sample_n(10) %>%
+    summarise(sample_mean=mean(height))
+})
+```
+
+**Notieren Sie jeweils, wie stark der Mittelwert über die 10 Männer jeweils abweicht vom Mittelwert aus der gesamten Tabelle mit allen Männern.**
+
+```{r}
+map_dfr(1:15, ~{
+  nhanes_men_only %>%
+    sample_n(10) %>%
+    summarise(sample_mean=mean(height))
+}) %>% 
+  summarise( sd = sum((sample_mean - population_mean$avg_man_height)^2)/15)
+```
+
+**Wiederholen Sie dies nun nochmals, aber ziehen Sie diesmal jeweils 100 statt nur 10 zufällig ausgewählte Zeilen.**
+
+```{r}
+map_dfr(1:15, ~{
+  nhanes_men_only %>%
+  sample_n(100) %>%
+  summarise(sample_mean = mean(height))
+}
+)
+```
+
+**Notieren Sie wieder die Abweichungen der Stichproben-Mittelwerte vom gesamt-Mittelwert.**
+
+```{r}
+map_dfr(1:15, ~{
+  nhanes_men_only %>%
+  sample_n(100) %>%
+  summarise(sample_mean = mean(height))
+}) %>%
+summarise(sd = sum((sample_mean - population_mean$avg_man_height)^2)/100)
+```
+
+# 
