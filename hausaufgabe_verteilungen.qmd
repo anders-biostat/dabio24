@@ -1,0 +1,65 @@
+---
+title: "Hausaufgabe zum 26.11."
+---
+
+In dieser Aufgabe simulieren wir ein Experiment uns sein Auswertung. Bei unserem Experiment soll es darum gehen, zwei große Wälder dahingehend zu vergleichen wie schwer die dort lebenden Wühlmäuse sind. Der Einfachheit nehmen wir an, dass alle Tiere ausgewachsen sind bzw. das wir alle Jungtiere ignorieren.
+
+Wir versetzen uns zunächst in die Rolle eines allwissenden Dämons, der das Gewicht aller Wühlmäuse kennt. (Der Begriff "Dämon" für ein solchen allwissend gedachten Wesens geht auf S. Laplace zurück.) Der Dämon erstellt für beide Wälder jeweils ein Histogramm der Körpergewichte der ausgewachsenen Wühlmäuse und erkennt, dass diese sehr gut durch eine Normalverteilung beschrieben sind, und zwar mit Mittelwert 110 g für Wald A und Mittelwert 120 g für Wald B. Die Standardabweichung sei bei beiden Verteilungen 20 g.
+
+### 1.
+
+Wald A enthält 2000 Wühlmäuse. Mit `popA <- rnorm( 2000, mean=90, sd=20 )` können wir R anweisen, einen Vektor mit 2000 Zufallszahlen zu generieren, die aus eine Normalverteilung mit den angegebenen Parametern gezogen werden. Wir nennen den Vektor `popA` für "population of forest A". Ebenso können wir die Grundgesamtheit der (ausgewachsenen) Wühläuse in Wald B erzeugen.
+
+Nun versetzen wir uns in die Rolle eines Forschers, der wissen möchte, ob die Wühlmäuse in Wald B besser genährt sind als in Wald A. Der Forscher stellt Lebendfallen auf und fängt in beiden Wäldern jeweils 10 Tiere und wiegt sie.
+
+Mit `sample( popA, 10)` können wir R anweisen, aus der Grundgesamtheit (population) `popA` eine Stichprobe (engl.: "sample") von 20 Werten zufällig auszuwählen. Wir weisen die Stichprobe der Variablen `sampleA` zu: `sampleA <- sample( popA, 10 )`. Ebenso erzeugen wir die Stichprobe für Wald B.
+
+Berechnen Sie nun die Mittelwerte der beiden Stichproben und vergleichen Sie. Ist der Mittelwert der Stichprobe aus Wald B größer als der Mittelwert für Wald A?
+
+Wiederholen Sie das simulierte Experiment 100 mal, indem Sie die Code-Zeilen mit `sample` und `mean` 100 mal ausführen. Zählen Sie dabei mit, wie oft der Mittelwert von B größer ist als der Mittelwert von A, und wie oft es anders herum ist.
+
+#### 2.
+
+Den Code 100 mal auszuführen und per Hand zu zählen ist mühsam. Wir wollen dies nun automatisieren.
+
+Schreiben Sie den Code für die Experiment-Simulation so um, dass am Schluss ein einzelner Wert ausgegeben wird, nämlich die Differenz der beiden Stichproben-Mitelwerte. Dann können Sie `replicate` benuzten, um den Code 1000 mal ausführen zu lassen:
+
+```r
+replicate( 1000, {
+  ...
+} )
+```
+
+Für `...` müssen Sie hier die Code-Zeilen einfügen, die die beiden Stichproben `sampleA` und `sampleB` ziehen und dann deren mittelwerte vonenander abzieht. Der Code sollte so geformt sein, dass er am Schluss die Differenz ausgibt. Wenn Sie den Code dann zwischen die geschweiften Klammen von `replicate` setzen, dann wir `replicate` den Code 1000 mal ausführen, die Ausgabe jeweils "einsammeln" und Ihnen einen Vektor mit 1000 Differenzen geben.
+
+Erstellen Sie ein Histogramm dieser Differenzen.
+
+#### 3.
+
+Untersuchen Sie den Vektor aus 1000 Differenzen (von 1000 Wiederholungen unseres Feldversuchs simulieren). Wie oft ist das Vorzeichen so, dass die Wühlmäuse aus Wald B besser genährt erscheinen und wie oft ist es anders herum? Können Sie die Wahrscheinlichkeit abschätzen, dass das Vorzeichen "richtig herum" ist?
+
+Sicherlich werden Sie zum Schluss kommen, dass der Feldversuch, wie hier beschrieben, nicht geeignet ist, zuverlässig festzustellen, in welchem der beiden Wälder die Wühlmäuse besser genährt sind.
+
+Wie sieht es aus, wenn die Forscher in jedem Wald nicht nur 10 Tiere, sondern je 20 Tiere fangen?
+
+Experimentieren Sie mit den Stichprobengrößen.
+
+#### 4.
+
+Nehmen Sie an, Sie wüssten, dass die Standardabweichung 20 g ist und die Differenz der wahren Mittelwerte 10 g ist (wie es der Dämon oben ermittelt hat), aber Sie wüssten nicht, in welchem der beiden Wälder der Erwatungswert höher ist. Sie planen ein Experiment, um das heraus zu finden. Wie viele Mäuse, denken Sie, sollten Sie mindestens fangen und wiegen, um die Frage mit einiger Sicherheit richtig beantworten zu können?
+
+#### 5. 
+
+Erstellen Sie mit RStudio ein Quarto-Dokument mit Ihrer lösung zu Teilaufgabe 2 und evtl. auch 3 und 4. Erzeugen Sie eine HTML-Datei und laden Sie diese auf Moodle hoch.
+
+Denken Sie dabei daran, sicherzustellen, dass die Abbildungen nicht separat gespeichert, sodnern in die HTML-Datei integriert werden, indem Sie im sog. YAML-Block ganz am Anfang des Quarto-Dokuments die html-Format-Optionen wie folgt angeben:
+
+```
+---
+title: "Hausaufgabe"
+author: "Name"
+format:
+  html:
+    embed-resources: true
+---    
+```
