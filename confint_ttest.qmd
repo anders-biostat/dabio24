@@ -189,7 +189,7 @@ mutate( f95 = qt( .975, n-1 ) %>% round(2) )
 
 Woher kommt der Wert 2.78 für n=5? Was ist die t-Verteilung?
 
-Wir simulieren 100000 mal folgendes: Ziehe $n$ Werte aus eine Standard-Normalverteilung, bestimme Mittelwert, Standardabweichung und SEM. Berechne das Verhältnis der Abweichung des Stichprobenmittelwerts vom wahren Wert 0 zum SEM. Wenn die Standardabweichung stets exakt auf 1 geschätzt werden würde, wäre dieses Verhältnis (mit konstant 1 im Nenner) standard-normalverteilt. Da der Nenner aber um 1 fluktuiert, werden die Tails fetter. Die sich ergebende Verteilung ist die t-Verteilung mit $n-1$ Freiheitsgraden, wie ein Vergleich des Histogramms mit der theretisch berechneten Dichtekurve illustriert:
+Wir simulieren 100000 mal folgendes: Ziehe $n$ Werte aus eine Standard-Normalverteilung, bestimme Mittelwert, Standardabweichung und SEM. Berechne das Verhältnis der Abweichung des Stichprobenmittelwerts vom wahren Wert 0 zum SEM. Wenn die Standardabweichung stets exakt auf 1 geschätzt werden würde, wäre dieses Verhältnis (mit konstant 1 im Nenner) standard-normalverteilt. Da der Nenner aber um 1 fluktuiert, werden die Tails fetter. Die sich ergebende Verteilung ist die t-Verteilung mit $n-1$ Freiheitsgraden, wie ein Vergleich des Histogramms mit der theoretisch berechneten Dichtekurve (in magenta; die Normalverteilung zum Vergleich in blau)illustriert:
 
 ```{r}
 n <- 5
@@ -199,7 +199,7 @@ replicate( 100000, {
   mean(x) / sem
 }) -> many_sems  
 
-hist( many_sems, 300, xlim=c(-10, 10), freq=FALSE )
+hist( many_sems, 300, xlim=c(-10, 10), freq=FALSE, ylim=c(0,.4) )
 
 xg <- seq( -10, 10, by=.1 )
 lines( xg, dnorm( xg ), col="blue" )
@@ -282,6 +282,8 @@ Die `t.test`-Funktion von R kann nicht nur t-Tests durchführen, sondern auch KI
 t.test(x)$conf.int
 ```
 
+Wir erhalten dasselbe Ergebnis wie zuvor.
+
 ## Vergleich von Mittelwerten
 
 ### Beispiel
@@ -355,7 +357,7 @@ Statt die KIs der Gruppen-Mittelwerte zu vergleichen, betrachtet man besser dire
 Die t.test-Funktion berechnet es für uns:
 
 ```{r}
-t.test( weight ~ group, weight_data, conf.level=1-0.0001154 )
+t.test( weight ~ group, weight_data )
 ```
 Die Differenz "Erwartungswert für C minus Erwartungswert für T" liegt also mit 95% Konfidenz
 im zwischen `{r} round( t.test( weight ~ group, weight_data )$conf.int[1], 2)` und `{r} round( t.test( weight ~ group, weight_data )$conf.int[2], 2)`
@@ -431,7 +433,7 @@ Die Differenz der Mittelwerte ist links viel größer als rechts, aber rechts is
 
 Lösung: Berechne die Differenz und ihren Standardfehler und betrachte ihr Verhältnis:
 
-$$t\text{-Statistik} = \frac{\text{Differenz der Mittelwerte}}{\text{Standardfehler der Differenz}}=\frac{\text{Differenz der Mittelwerte}}{\text{gepoolte Standardabweichung}/\sqrt{\text{Anzahl der Werte}}}$$
+$$t\text{-Statistik} = \frac{\text{Differenz der Mittelwerte}}{\text{Standardfehler der Differenz}}$$
 Die Verteilung dieses Werts ist die Studentsche $t$-Verteilung mit $n-2$ Freiheitsgraden (wobei $n$ die Anzahl der Werte in beiden Gruppen zusammen ist). Dieser Wert liegt im t-Test der Berechnung von Differenz-KI und p-Wert zugrunde.
 
 Die t-Test-Funktion gibt uns alle diese Werte aus:
