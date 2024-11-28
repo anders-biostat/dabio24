@@ -36,6 +36,8 @@ Wintersemester 2024/25
   - [Histogramme](histograms.html)
   - [Verteilungen](verteilungen.html)
   - [Hausaufgabe, fällig zum 26.11.](hausaufgabe_verteilungen.html)
+- Einfache Inferenz  
+  - [Mittelwerte: Konfidenzintervall und t-Test](confint_ttest.html)
 
 ## Musterlösungen zu den Hausaufgaben
 - zur Hausaufgabe [vom 7.11.](Loesung_Hausaufgabe_2024-11-07.html)
@@ -43,5 +45,6 @@ Wintersemester 2024/25
 
 ## Weitere Links
 
+- [Quellcode](https://github.com/anders-biostat/dabio24) for Quarto notebooks and this site
 - [Video-Aufzeichnungen der Vorlesung](https://www.youtube.com/playlist?list=PL3RVGH-VQHwIF56KXWWgCsRLHgcxNVsrE)
 - [Literatur zu R und zu Statistik](literature.html)
