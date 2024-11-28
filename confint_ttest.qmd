@@ -1,0 +1,568 @@
+---
+title: "Konfidenzintervalle für Mittelwerte und t-Tests"
+---
+
+```{r message=FALSE}
+library( tidyverse )
+library( ggbeeswarm )
+set.seed( 13245768 )
+```
+
+## Standardfehler des Mittelwerts
+
+Wiederholung:
+
+Gegeben sei eine Zufallsgröße mit Erwartungswert (d.h. Mittelwert in der Grundgesamtheit) $\mu$ und Standardabweichung (der Grundgesamtheit) $\sigma$. Wir ziehen $n$ Werte (d.h. wir entnehmen der Grundgesamtheit $n$ zufällig ausgewählte Elemente) und bestimmen deren Mittelwert $\hat\mu$. 
+
+Die Standardabweichung des Stichprobenmittelwerts vom Erwartungswert, genannt der "Standardfehler des Mittelwerts" (standard error of the mean, SEM), beträgt dann $\text{SEM} = \sigma /\sqrt{n}$.
+
+#### Beispiel 1
+
+Die Grundgesamtheit sei eine Normalverteilung mit $\mu=10$ und $\sigma=3$. Wir ziehen $n=25$ Werte:
+
+```{r}
+rnorm( 25, mean=10, sd=3 ) -> x
+x
+```
+
+Nun bestimmen wir den Mittelwert:
+
+```{r}
+mean(x)
+```
+
+Wir simulieren, dass dieses Experiment 10000 mal wiederholt wird:
+
+```{r}
+replicate( 10000, { 
+  rnorm( 25, mean=10, sd=3 ) -> x
+  mean( x ) 
+} ) -> many_means 
+```
+
+Hier ist ein Histogramm der Einzelwerte und der Mittelwerte:
+
+```{r}
+breaks <- seq( -3, 23, length.out=100 )
+
+hist( rnorm( 10000, mean=10, sd=3 ), freq=FALSE, breaks=breaks, main="Einzelwerte in Grundgesamtheit" ) 
+
+hist( many_means, freq=FALSE, breaks=breaks, main="Mittelwerte von je 25 Einzelwerten" ) 
+```
+Die Verteilung der Mittelwerte ist um den Faktor $\sqrt{n}=5$ schmäler als die Verteilung der Einzelwerte.
+
+### SEM mit Stichproben-Standardabweichung
+
+In der Praxis wissen wir die Standardabweichung der Grundgesamtheit nicht. Wir müssen sie aus der Stichprobe schätzen.
+
+Beispiel, wie zuvor: 25 Werte gezogen aus $\mathcal{N}(10,3)$
+
+```{r}
+rnorm( 25, mean=10, sd=3 ) -> x
+mean( x ) 
+sd( x )
+```
+
+Wir schätzen für den SEM
+
+```{r}
+sd(x) / sqrt(25)
+```
+
+und geben daher als Mittelwert an: `{r} sprintf( "%.2f ± %.2f", mean(x), sd(x)/5 )`
+
+Der angegebene Bereich schließt den wahren Mittelwert ein.
+
+Ist das eine zuverlässige Methode? Wir probieren das 10000 mal aus:
+
+```{r}
+replicate( 10000, {
+  rnorm( 25, mean=10, sd=3 ) -> x
+  c( mean=mean(x), sem=sd(x)/5 )
+}) %>% t -> many_means_with_sem
+
+head( many_means_with_sem )
+```
+
+Wie oft liegt der wahre Wert innerhalb von Mittelwert ± Standardfehler?
+
+```{r}
+many_means_with_sem %>%
+as_tibble() %>%
+mutate( contains_true_value = mean-sem < 10 & mean+sem > 10 ) %>%
+summarise( mean(contains_true_value) )
+```
+
+Antwort: 67%. Das war nach der 68-95-99.7-Regel so zu erwarten.
+
+Wenn wir das Interval doppelt so groß machen, erwarten wir Überlapp mit dem wahren Wert in 95% der Fälle:
+
+```{r}
+many_means_with_sem %>%
+as_tibble() %>%
+mutate( contains_true_value = mean-2*sem < 10 & mean+2*sem > 10 ) %>%
+summarise( mean(contains_true_value) )
+```
+
+Das hat funktioniert.
+
+Wir können für einen Mittelwert auf diese Weise ein sog. 95%-Konfidenzintervall (95% confidence interval, 95%-CI) konstruieren:
+
+```{r}
+rnorm( 25, mean=10, sd=3 ) -> x
+
+# Stichproben-Mittelwert:
+mean(x) -> mu
+
+# SEM:
+sd(x) / sqrt(length(x)) -> sem
+sem
+
+# zugehöriges 95%-KI
+c( mu-2*sem, mu+2*sem )
+```
+
+*Kleinliche Anmerkung:* Die 68-95-99.7-Regel ist gerundet. Eigentlich muß man für 95% Wahrscheinlichkeit die Standardabweichung nicht mal 2 nehmen, sondern mal 1.96.
+
+Das sieht man, wenn man die `qnorm`-Funktion fragt, zwischen welchen Werten der Standard-Normalverteilung die mittleren 95% der Fläche (also von 2.5% bis 97.5%) liegen
+
+```{r}
+qnorm( .025  )
+qnorm( .975  )
+```
+
+### kleine Stichproben
+
+Nun das große **Aber**: Mit einer deutlich kleineren Stichprobe funktioniert es nicht mehr. 
+
+Wir versuchen $n=5$
+
+```{r}
+replicate( 10000, {
+  rnorm( 5, mean=10, sd=3 ) -> x
+  c( mean=mean(x), sem=sd(x)/sqrt(length(x)) )
+}) %>% t -> many_means_with_sem
+
+
+many_means_with_sem %>%
+as_tibble() %>%
+mutate( contains_true_value = mean-2*sem < 10 & mean+2*sem > 10 ) %>%
+summarise( mean(contains_true_value) )
+```
+
+Nur 88% statt 95%.
+
+Der Grund ist das für kleines $n$ die Schätzung der Standardabweichung zu ungenau ist.
+
+Um das auszugleichen, muss man den SEM mit einer Zahl multiplizieren, die größer ist als 2 (bzw. als 1.96).
+
+Die Student'sche t-Verteilung gibt den korrekten Wert. Wir verwenden `qt` (Quantile der t-Verteilung) statt `qnorm` (Quantile der Normalverteilung) und wiederholen die Rechnung von eben:
+
+```{r}
+qt( 0.025, df=4 )
+qt( 0.975, df=4 )
+```
+
+Die Studentsche t-Verteilung hat einen *Parameter*, genannt die *Anzahl der Freiheitsgrade* (degrees of freedom, df). Dies ist stets die Anzahl der Werte minus die Anzahl der Mittelwerte, also hier $5-1=4$.
+
+(Die Formel, die `qt` intern verwendet ist etwas kompliziert; siehe [Wikipedia](https://en.wikipedia.org/wiki/Student%27s_t-distribution).)
+
+Mit dem Faktor 2.78 erreichen wir nun 95% Überdeckungswahrscheinlichkeit
+
+```{r}
+many_means_with_sem %>%
+as_tibble() %>%
+mutate( contains_true_value = mean-2.78*sem < 10 & mean+2.78*sem > 10 ) %>%
+summarise( mean(contains_true_value) )
+```
+
+Die folgende Tabelle zeigt den Faktor, mit dem man den SEM multiplizieren muss, um ein 95%-Konfidenzintervall zu konstruieren.
+
+```{r}
+tibble( n = c(2:10, 15,20, 50, 100, 1000, 10000 ) ) %>%
+mutate( f95 = qt( .975, n-1 ) %>% round(2) ) 
+```
+
+### Herkunft der t-Verteilung
+
+*(für mathematisch Interessierte)*
+
+Woher kommt der Wert 2.78 für n=5? Was ist die t-Verteilung?
+
+Wir simulieren 100000 mal folgendes: Ziehe $n$ Werte aus eine Standard-Normalverteilung, bestimme Mittelwert, Standardabweichung und SEM. Berechne das Verhältnis der Abweichung des Stichprobenmittelwerts vom wahren Wert 0 zum SEM. Wenn die Standardabweichung stets exakt auf 1 geschätzt werden würde, wäre dieses Verhältnis (mit konstant 1 im Nenner) standard-normalverteilt. Da der Nenner aber um 1 fluktuiert, werden die Tails fetter. Die sich ergebende Verteilung ist die t-Verteilung mit $n-1$ Freiheitsgraden, wie ein Vergleich des Histogramms mit der theretisch berechneten Dichtekurve illustriert:
+
+```{r}
+n <- 5
+replicate( 100000, {
+  rnorm( n, mean=0, sd=1 ) -> x
+  sd(x) / sqrt(n) -> sem
+  mean(x) / sem
+}) -> many_sems  
+
+hist( many_sems, 300, xlim=c(-10, 10), freq=FALSE )
+
+xg <- seq( -10, 10, by=.1 )
+lines( xg, dnorm( xg ), col="blue" )
+lines( xg, dt( xg, n-1 ), col="magenta" )
+```
+
+## Konfidenzintervalle
+
+Wir fassen zusammen:
+
+#### Idee
+
+Das Ergebnis einer Messung oder Analyse ist nur von sehr eingeschränktem Nutzen, wenn man nicht weiß, wie genau es ist.
+
+Daher sollte man zu jedem Ergebnis stets ein Konfidenzintervall angeben.
+
+Ein xx%-Konfidenzintervall ist ein Intervall (also eine untere und obere Grenze) um einen Schätzwert, dass einen Bereich angibt, indem der "wahre" Wert der Grundgesamtheit vermutlich liegt. Die Methode, es zu erstellen, ist so konstruiert, dass man mit Wahrscheinlichkeit xx% ein Interval erhält, dass den wahren Wert überdeckt.
+
+Üblicherweise wählt man Konfidenz-Niveau von 95%.
+
+Für einen Stichproben-Mittelwert erhält man das konfidenzintervall wie folgt:
+
+#### Einfache, aber ungenaue Methode
+
+Sei $\hat\mu$ der Mittelwert und $\hat\sigma$ die Standardabweichung der Stichprobe, und $n$ die Anzahl der Werte in der Stichprobe.
+
+Man berechnet den Standardfehler des Mittelwerts mit der Formel $\text{SEM}=\hat\sigma/\sqrt{n}$.
+
+Dann nimmt man als 95%-Konfidenzintervall das Intervall von $\hat\mu-2\hat\sigma$ bis $\hat\mu+2\hat\sigma$.
+
+Diese Methode sollte man nur verwenden, wenn $n$ groß ist (min. 20).
+
+(schlechtes) Beispiel:
+
+```{r}
+# Einzelwerte
+c( 10.95, 8.21, 8.19, 6.33, 11.09, 12.28, 10.01, 7.14 ) -> x
+
+# Mittelwert
+mean(x) -> mymean
+mymean
+
+#SEM
+sd(x)/sqrt(length(x)) -> sem
+
+# KI
+c( mymean - 2*sem, mymean + 2*sem )
+```
+
+(kein gutes Beispiel, da $n$ zu klein ist für die ungenaue Methode)
+
+#### Genauere Methode
+
+Wenn $n$ klein ist, muss man in der Formel für die Grenzen des Konfidenz-Intervalls die Zahl 2 durch eine Zahl ersetzen, die man aus der t-Verteilung erhält:
+
+```r
+qt( .975, n-1 )
+```
+
+Für großes $n$ ergibt diese Formel in etwa den Wert 2 (genauer: 1.96).
+
+Das `.975` ist dabei die obere Quantilgrenze, die man erhält als Mitte zwischen 95% und 100%.
+
+Also: Konfidenzintervall von $\hat\mu-q\hat\sigma$ bis $\hat\mu+q\hat\sigma$, wobei $q$ der Wert des 97.5%-Quantils der $t$-Verteilung mit $n-1$ Freiheitsgraden ist.
+
+Beispiel (mit den Variablen von oben):
+
+```{r}
+qt( .975, length(x)-1 ) -> q
+
+# KI
+c( mymean - q*sem, mymean + q*sem )
+```
+
+#### Bequeme Methode
+
+Die `t.test`-Funktion von R kann nicht nur t-Tests durchführen, sondern auch KIs berechnen:
+
+```{r}
+t.test(x)$conf.int
+```
+
+## Vergleich von Mittelwerten
+
+### Beispiel
+
+Wir betrachten das folgende Beispiel als Prototyp für die Aufgaben, die wir hier behandeln möchten:
+
+Forscher möchten heraus finden, ob eine gewisse Substanz zu Gewichtserhöhung führt (z.B., weil sie den Appetit stimuliert oder die Insulinantwort beeinflusst). Dazu werden Versuchstiere (Mäuse) in zwei Gruppen aufgeteilt. Einer Gruppe, der "treatment group" (behandelte Gruppe) wird die Substanz ins Futter gemischt, der anderen Gruppe, genannt "control group" (Vergleichsgruppe) hingegen nicht. Anfangs sind alle Mäuse in etwa gleich schwer. Nach drei Wochen werden alle Tiere gewogen. Wir möchten wissen, ob der *Erwartungswert* des Gewichts in der behandelten Gruppe ("Gruppe T" für "treatment") anders ist als der Erwartungswert in der Vergleichgruppe ("Gruppe C" für "control").
+
+
+So wie im folgenden könnten die Daten aussehen:
+```{r}
+set.seed( 1324996 )
+
+bind_rows(
+  tibble( weight = rnorm( n=20, mean=22, sd=4 ), group = "C" ),
+  tibble( weight = rnorm( n=20, mean=26, sd=4 ), group = "T" ) ) -> weight_data
+
+beeswarm::beeswarm( weight ~ group, weight_data )
+```
+
+Anmerkungen:
+
+- Das Gewicht einer Maus hängt nicht nur davon ab, welche der beiden Futtermischungen sie erhält, sondern auch von vielen anderen Faktoren, die wir nicht kennen und/oder nicht beeinflussen können. 
+
+- Unsere Frage bezieht sich auf den *Erwartungswert*, also den Mittelwert, den man erhielte, wenn man das Experiment mit "unendlich" vielen Mäusen durchführte, so dass sich alle anderen Einflüssen in beiden Gruppen zum gleichen Wert "heraus mitteln".
+
+- Der Umfang dieser anderen Einflüsse wird durch die Standardabweichung (Varianz) in der Grundgesamtheit beschrieben.
+
+Grundsätzliche Idee:
+
+- Wir bestimmen in beiden Gruppen den Mittelwert und das zugehörige Konfidenzintervall. Daraus können wir die Differenz der Mittelwerte bestimmen, sowie ein Konfidenzintervall für die Differenz.
+
+- Wenn das 95%-Konfidenzintervall der Differenz die Null *nicht* überdeckt, können wir "mit 95% Konfidenz" sagen, dass das Futter (bzw. dir zugemischte Substanz) einen Einfluss auf das Gewicht hat.
+
+- Wenn es hingegen die Null überdeckt, können wir mit 95% Konfidenz sagen: Die Substanz hat entweder gar keinen Effekt, oder der Effekt ist nicht oder kaum größer als das Konfidenzintervall breit ist.
+
+  - Wichtig: Wenn das KI die Null überdeckt und sehr breit ist, können wir *gar nichts* folgern.
+  
+  - Zu folgern, die Substanz habe keinen Effekt, weil das Testergebnis "nicht signifikant" war (d.h.: das KI der Differenz hat die Null überdeckt), ist **falsch**!  
+
+### Rechnung für Beispiel
+
+#### vorab: MIttelwerte der Gruppen
+
+Wir berechnen zunächst die KIs der Mittelwerte der beiden Gruppen:
+
+```{r}
+weight_data %>%
+group_by( group ) %>%
+summarise( broom::tidy( t.test( weight ) ) ) %>%
+select( group, mean=estimate, conf.low, conf.high ) -> weight_data_means
+
+weight_data_means
+```
+Zur Erinnerung: Hier wird (noch) *kein* t-Test durchgeführt. Wir "misbrauchen" die `t.test`-Funktion lediglich, um das KI zu bekommen.
+
+Graphische Darstellung:
+
+```{r}
+ggplot( NULL ) +
+  geom_errorbar( aes( x=group, ymin=conf.low, ymax=conf.high ), data=weight_data_means, width=.4, col="magenta" ) +
+  geom_beeswarm( aes( x=group, y=weight ), data=weight_data ) 
+```
+
+Die KIs überlappen sich nicht. Wir können also mit 95% Konfidenz sagen, dass die Substanz eine Gewichtszunahme bewirkt.
+
+#### t-Test
+
+Statt die KIs der Gruppen-Mittelwerte zu vergleichen, betrachtet man besser direkt das KI der Differenz der Mittelwerte.
+
+Die t.test-Funktion berechnet es für uns:
+
+```{r}
+t.test( weight ~ group, weight_data, conf.level=1-0.0001154 )
+```
+Die Differenz "Erwartungswert für C minus Erwartungswert für T" liegt also mit 95% Konfidenz
+im zwischen `{r} round( t.test( weight ~ group, weight_data )$conf.int[1], 2)` und `{r} round( t.test( weight ~ group, weight_data )$conf.int[2], 2)`
+
+#### Vergleich der KIs
+
+Die Breite des KIs der Differenz ist kleiner als die Summe der Breiten der KIs der beiden Gruppen-Mittelwerte.Daher kann es vorkommen, dass das KI der Differenz die 0 nicht überlappt ("Differenz ist statistisch signifikant") obwohl die KIs der Einzelwerte miteinander überlappen.
+
+Grund: Die Summe oder Differenz zweier Werte hat weniger Unsicherheit als die Einzelwerte, weil sich Fluktationen ausgleichen (ausmitteln). 
+
+(Mathematisch: Die Summe oder Differenz zweier Werte mit Standardfehlern $u_1$ und $u_2$ hat Standardfehler $u$ mit $u^2=u_1^2+u_2^2$. Man sagt: Standardfehler addieren sie "pythagoräisch", also, wie im Satz des Pythagoras.)
+
+Wenn gewünscht, schätzt die t.test-Funktion die Standardabweichung nicht für jede Gruppe getrennt, sondern für beide Gruppen gemeinsam (sog. "gepoolte Standardabweichung"). Da die Daten aus beiden Gruppen zusammen genommen werden, ist die Anzahl der Freiheitsgrade größer und der oben beschriebene Faktor $q$ kleiner. Das ist nur zulässig, wenn angenommen werden darf, dass die Standardabweichung in den Grundgesamtheiten der beiden Gruppen gleich ist. Das macht das KI noch etwas enger.
+
+Bei unserem Beispiel macht es aber kaum einen Unterschied:
+
+```{r}
+t.test( weight ~ group, weight_data, var.equal=TRUE )
+```
+
+In der Literatur wird der t-Test mit `var.equal=TRUE` oft als der ursprüngliche t-Test von Student bezeichnet, und die Variante mit `var.equal=FALSE` (der Default in R) als Welch's t-Test.
+
+#### p-Wert
+
+In unserem Beispiel liegt die Null weit außerhalb des 95%-KI der Mittelwert-Differenz. Ist das auch noch der Fall, wenn wir für die Differenz ein 99,9%-KI berechnen?
+
+```{r}
+t.test( weight ~ group, weight_data, conf.level=.999 )
+```
+
+Ja. Die Untergrenze des KI ist aber näher an 0 heran gerückt
+
+Bei welchem Konfidenz-Niveau erreicht das KI die Null? Diese Frage beantwortet die t-Test-Funktion mit Angabe des sog. "p-Werts",
+hier 0.00012. Bei einem Konfidenz-Niveau von 99.988% wird die Null vom Diffferenz-KI gerade berührt:
+
+```{r}
+t.test( weight ~ group, weight_data, conf.level=1-0.0001154 )
+```
+
+Definition 1 des p-Werts: (Wir werden später noch eine weiter, äquivalente, Defintion kennen lernen)
+
+Der **p-Wert** ist ein Wert, den ein statistischer Test berechnet. Ein p-Wert $p$ bedeutet, dass die Daten Evidenz bieten, um den  vermuteten Effekt mit Konfidenz bis zu $1-p$ als signifikant anzusehen, d.h., auszuschließen, dass der Effekt 0 ist.
+
+Bei unserem Beispiel ist klar, was gemeint ist mit "der Effekt ist 0": nämlich dass die Differenz der Gruppen-Erwartungswerte 0 ist.
+
+Im Allgemeinen muss man beschreiben, was man meint; diese Beschreibung nennt man die **Null-Hypothese**.
+
+Die allgemeine Definition des p-Werts lautet:
+
+Der p-Wert ist die Wahrscheinlichkeit, dass das beobachtete Ergebnis, oder ein noch extremeres, eintritt, wenn die Null-Hypothese abgenommen wird.
+
+Was bedeutet "oder noch extremer"?
+
+#### Die t-Statistik
+
+Welcher der beiden folgenden Fälle ist "extremer"?
+
+```{r}
+set.seed( 1324 )
+bind_rows(
+  tibble( group="C", experiment="A", value=rnorm( 20, 20, 4 ) ),
+  tibble( group="T", experiment="A", value=rnorm( 20, 27, 4 ) ),
+  tibble( group="C", experiment="B", value=rnorm( 20, 20, .5 ) ),
+  tibble( group="T", experiment="B", value=rnorm( 20, 23, .5 ) ) ) -> data2exp
+
+data2exp %>%
+ggplot +
+  geom_beeswarm( aes( x=group, y=value ), cex=2.2 ) +
+  facet_grid( cols=vars(experiment) )
+```
+
+Die Differenz der Mittelwerte ist links viel größer als rechts, aber rechts ist das Ergebnis "klarer".
+
+Lösung: Berechne die Differenz und ihren Standardfehler und betrachte ihr Verhältnis:
+
+$$t\text{-Statistik} = \frac{\text{Differenz der Mittelwerte}}{\text{Standardfehler der Differenz}}=\frac{\text{Differenz der Mittelwerte}}{\text{gepoolte Standardabweichung}/\sqrt{\text{Anzahl der Werte}}}$$
+Die Verteilung dieses Werts ist die Studentsche $t$-Verteilung mit $n-2$ Freiheitsgraden (wobei $n$ die Anzahl der Werte in beiden Gruppen zusammen ist). Dieser Wert liegt im t-Test der Berechnung von Differenz-KI und p-Wert zugrunde.
+
+Die t-Test-Funktion gibt uns alle diese Werte aus:
+
+```{r}
+data2exp %>%
+group_by( experiment ) %>%
+summarise( broom::tidy( t.test( value ~ group, var.equal=TRUE ) ) )
+```
+
+- `estimate1` und `estimate2` sind die Gruppen-Mittelwerte
+- `estimate` ist die Differenz der Mittelwerte
+- `statistic` ist die t-Statistik
+- `parameter` ist die Anzahl der Freiheitsgrade für die t-Verteilung
+- `p.value` ist die Wahrscheinlichkeit, den genannten t-Wert, oder einen im Betrag größeren, zu erhalten
+- `conf.low` und `.conf.high` sind die Grenzen des 95%-Konfidenzintervalls der Differenz
+- `alternative=two-sided` gibt an, dass bei der p-Wert-Berechnung angenommen wurde, dass die Differenz in beide Richtungen extremer sein könnte
+
+*Nur für Interessierte:* Im folgenden berechnen wir diese Werte für Experiment A per Hand.
+```{r}
+data2exp %>%
+filter( experiment=="A" ) %>%
+group_by( group ) %>%
+mutate( group_mean = mean(value) ) %>%
+ungroup %>%
+mutate( residuals = value - group_mean ) %>%  
+summarise( sum_of_squares = sum( residuals^2 ), n=n() ) %>%
+mutate( pooled_variance = sum_of_squares / (n-2) ) %>%
+mutate( pooled_sd = sqrt( pooled_variance ) ) %>%
+pull(pooled_sd) -> pooled_sd
+
+data2exp %>%
+filter( experiment=="A" ) %>%
+group_by( group ) %>%
+summarise( 
+  group_mean = mean(value),
+  group_mean_se = pooled_sd / sqrt( n() ),
+  n=n() ) %>%
+summarise( 
+  mean_diff = diff( group_mean ),
+  mean_diff_se = sqrt( sum( group_mean_se^2 ) ),
+  n = sum(n) ) %>%
+mutate( t = mean_diff / mean_diff_se ) %>%
+mutate( p = 2* ( 1-pt( t, n-2 ) ) )
+```
+
+### Statistische Power
+
+Wir wiederholen das simulierte Experiment von oben, diesmal mit Base-R statt Tidyverse:
+
+```{r}
+ctrl  <- rnorm( n=20, mean=22, sd=4 ) 
+treat <- rnorm( n=20, mean=26, sd=4 ) 
+
+t.test( ctrl, treat )
+```
+
+WIr können dies 1000 mal durchführen und fragen, wie oft der p-Wert unter 0.05 war:
+
+```{r}
+replicate( 10000, {
+  ctrl  <- rnorm( n=20, mean=22, sd=4 ) 
+  treat <- rnorm( n=20, mean=25, sd=4 ) 
+
+  t.test( ctrl, treat )$p.value } ) -> many_pvals
+
+mean( many_pvals < .05 )
+```
+
+Wir können dieses Ergebnis wie folgt beschreiben:
+
+Wenn die (uns unbekannten, wahren) Parameter des Experiments wie folgt sind:
+
+ - Die Standardabweichung des Gewichts von Mäusen, die dasselbe Futter erhalten, ist 4 g.
+ - Der Effekt der zugemischten Substanz ist eine Gewichtszunahme von 3 g (von 22 g auf 25 g)
+
+und wenn wir für beide Gruppen je 20 Mäuse verwenden,
+
+und wie ein Konfidenzniveau von 95% (also einen p-Wert unter 5%) erfordern,
+
+dann ist die Wahrscheinlichkeit, dass wir belegen können, dass die Substanz das Gewicht 
+beeinflusst, `{r} round( mean( many_pvals < .05 )*100 )`%.
+
+#### Rechnen statt Simulieren
+
+Die 10000 Simulation brauchen recht lange. Zum Glück kann man die Wahrscheinlichkeit auch mit einer Formel berechnen. Die Funktion `power.t.test` liefert dasselbe Ergebnis wie die Simulation eben, aber viel schneller:
+
+```{r}
+power.t.test( n=20, delta=3, sd=4 )
+```
+Der folgende Code ruft diese Funktion für eine Vielzahl vom Kombinationen von Werten auf:
+
+```{r}
+expand_grid( diff=seq( 0, 6, by=.1 ), n=c(5, 10, 20, 50, 200, 1000 ) ) %>%
+rowwise() %>%
+mutate( power = power.t.test( n=n, delta=diff, sd=4, sig.level = 0.01 )$power ) %>%
+ggplot( aes( x=diff, y=power, col=factor(n) ) ) +
+  geom_line() +
+  labs( 
+    x = "difference between means (true effect size)",
+    y = "statistical power (i.e., prob to get p<.05)",
+    col = "n",
+    title = "Power of a t-test",
+    subtitle = "(for within-group SD = 4)")
+```
+Dieser Plot zeigt uns die statistische Power eines t-Tests, wenn die wahre "within-group standard deviation" 4
+beträgt, in Abhängigkeit von der wahren Differenz der Mittelwerte (x-Achse) und der Anzahl Mäuse pro Gruppe (Farbe).
+
+Dieser Plot passt zu unserem Beispiel; besser wäre es aber, die Differenz (x-Achse) in Einheiten der Standardabweichung
+darzustellen:
+
+```{r}
+expand_grid( diff=10^seq( -2, 1, by=.01 ), n=c(2, 3, 5, 10, 30, 100, 300, 1000 ) ) %>%
+rowwise() %>%
+mutate( power = power.t.test( n=n, delta=diff, sd=1 )$power ) %>%
+ggplot( aes( x=diff, y=power, col=fct_rev(factor(n)) ) ) +
+  geom_line() +
+  scale_x_log10() +
+  labs( 
+    x = "true effect size in units of within-group SD",
+    y = "statistical power at 95% confidence level",
+    col = "n",
+    title = "Power of a t-test" )
+```
+
+
+#### False positives
+
+Beachten Sie die linke untere Ecke des Plots:
+
+Die Wahrscheinlichkeit, dass man ein positives Ergebnis (p<0.05) erhält, obwohl der wahre Effekt 0 ist, beträgt 0.05. Das ist genau, was man nach Definition des p-Werts erwartet.
+
+Das bedeutet aber *nicht*, dass die Wahrscheinlichkeit eines False-Positives 5%  und die Wahrscheinlichkeit eines true positives 95% wäre -- denn die Zahl gilt ja nur, wenn die wahre Effektgröße 0 wäre, was man ja nicht weiß.
+
