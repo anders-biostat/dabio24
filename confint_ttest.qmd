@@ -568,3 +568,224 @@ Die Wahrscheinlichkeit, dass man ein positives Ergebnis (p<0.05) erhält, obwohl
 
 Das bedeutet aber *nicht*, dass die Wahrscheinlichkeit eines False-Positives 5%  und die Wahrscheinlichkeit eines true positives 95% wäre -- denn die Zahl gilt ja nur, wenn die wahre Effektgröße 0 wäre, was man ja nicht weiß.
 
+
+### Permutations-Tests
+
+#### Permutationen
+
+Unter einer *Permutation* versteht man eine Umordnung einer Liste von Elementen, d.h., die permutierte Liste enthält dieselben Element, aber in einer anderen Reihenfolge.
+
+Beispiel: Wir haben diesen Vektor:
+
+```{r}
+x <- c( "A", "B", "B", "D", "A", "F", "G", "H" )
+```
+
+Mit der Funktion `sample` können wir eine zufällige Permutation erhalten:
+
+```{r}
+sample(x)
+sample(x)
+sample(x)
+```
+
+#### Beispiel für Test
+
+Permutations-Tests sind ein allgemeines Konzept, dass man oft anwenden, wenn ein spezieller, auf die Situation passender Test, nicht zur Verfügungs steht. Wir demonstrieren die Idee hier am Beispiel des Vergleichs zweier Mittelwerte -- auch wenn dies eine Situtation ist, wo ein speziell auf die Aufgabe passender Test, nämlich der t-Test, geeigneter wäre.
+
+Beispieldaten: 10-jährige Probanden in NHANES. Vegleich Körpergröße Mädchen und Jungen:
+
+```{r}
+read_csv( "data_on_git/nhanes.csv" ) %>%
+filter( age == 10, !is.na(height) ) -> nhanes10
+
+head( nhanes10 )
+```
+
+Natürlich ist das geeignete Mittel für diese Aufgabe der t-Test:
+
+```{r}
+t.test( height ~ gender, nhanes10 )
+```
+
+Wir betrachten nun dennoch den Permutationstest als Alternative.
+
+Nullhypothese: Das Geschlecht hat bei 10jährigen keinen Einfluss auf die Körpergröße. Der Unterschied zwischen den Mittelwerten von Jungen und Mädchen entsteht nur dadurch, dass man nie zweimal denselben Mittelwert erhält, wenn man Werte auf zwei Gruppen aufteilt.
+
+Teststrategie: Wir berechnen die Differenz der Mittelwerte nach einer zufälligen Durchmischung der Zuordnung der Werte zu den beiden Geschlechtern.
+
+Hier eine Permutation der Spalte `gender`:
+
+```{r}
+nhanes10 %>%
+mutate( gender_perm = sample(gender) )
+```
+
+Differenz der Mittelwerte mit korrekter Geschlechter-Zuordnung:
+
+```{r}
+nhanes10 %>%
+group_by( gender ) %>%
+summarise( mean_height = mean(height) ) %>% 
+pull( mean_height )
+```
+
+Dasselbe in Base-R (weil schneller als Tidyverse):
+
+```{r}
+tapply( nhanes10$height, nhanes10$gender, mean ) -> means
+
+means
+```
+
+Differenz:
+
+```{r}
+means["male"] - means["female"]
+```
+
+Dasselbe, aber mit permutierter Geschlechter-Zuordnung:
+
+```{r}
+tapply( nhanes10$height, sample(nhanes10$gender), mean ) -> means
+means["male"] - means["female"]
+```
+
+Wir führen den vorstehenden Code-Chunk sehr oft aus:
+
+```{r}
+set.seed( 13245768 )
+
+replicate( 10000, {
+  tapply( nhanes10$height, sample(nhanes10$gender), mean ) -> means
+  means["male"] - means["female"]
+} ) -> many_diffs
+
+str( many_diffs )
+```
+
+
+Hier ist ein Histogramm der "Permutations-Null-Verteilung" der Differenzen 
+
+```{r}
+hist( many_diffs )
+abline( v = -1.784731, col="red" )
+```
+
+Die rote Linie markiert den beobachteten Wert der Differenz (s.o.).
+
+Welcher Anteil der Permutations-Null-Werte ist weiter von 0 entfernt (also, im Betrag größer) als die beobachtete Differenz?
+
+```{r}
+sum( abs(many_diffs) > 1.784731 )    
+```
+
+(Die Funktion `abs` berechnet den Absolutbetrag (absolute value), d.h., entfernt negative Vorzeichen.)
+
+714 von 10000 Werten, also 7%.
+
+Unser Permutations p-Wert beträgt somit 715/10001 = 0.071. 
+
+(Man addiert 1 zu Zähler und Nenner, damit auch bei Zähler 0 der p-Wert die Anzahl der durchgeführten Permutationen widerspiegelt.)
+
+Der p-Wert liegt recht nahe am p-Wert des t-Tests.
+
+Natürlich ist ein Permutations-p-Wert bei jeder Berechnung leicht anders. Wenn man aber genügend Permutationen durchführt, ändert er sich nur leicht.
+
+
+### gepaarte Tests
+
+Beispiel: Eine Landwirtschaftliche Versuchsanstalt verfügt über eine größere Zahl von Ackern, die sich alle in der Bodenbeschaffenheit unterscheiden. Ein neuer Dünger für Weizen soll getestet werden. 
+
+Szenario A: Auf allen Feldern wird Weizen gesäht. Jedes Feld wird zufällig einer von zwei Gruppen (T und C) zugewiesen. Die T-Felder erhalten den Dünger, die C-Felder nicht.
+
+Szenario B: Jedes Feld wird in zwei Hälften aufgeteilt ("split-plot design"). Eine Hälfte erhält den Dünger, die andere nicht.
+
+##### Simulation von Szenario A
+
+Wir haben 20 Felder. Der Ertrag ("yield") ohne den Dünger variiertet von Feld zu Feld. Ebenso variiert der Effekt, den der Dünger für das jeweilige Feld hat bzw. hätte.
+
+```{r}
+set.seed( 1234 )
+
+tibble( plot = 1:20 ) %>%
+mutate( 
+  yield_without_fertilizer =  rnorm( n(), 100, 30 ),
+  fertilizer_effect =  rnorm( n(), 5, 4 )  ) -> plots0
+plots0
+```
+
+Nun weisen wir die Felder den zwei Gruppen zu und simulieren die Ernte, indem wir den Dünger-Effekt bei den gedüngten Feldern hinzufügen:
+
+```{r}
+plots0 %>%
+mutate( group = sample( rep( c( "C", "T" ), each=10 ) ) ) %>%
+mutate( yield = yield_without_fertilizer + ifelse( group=="T", fertilizer_effect, 0 ) ) -> plots
+
+plots
+```
+
+Diese Werte sieht als der Versuchsleiter:
+
+```{r}
+plots %>%
+ggplot + geom_beeswarm( aes( x=group, y=yield ), cex=2.5 )
+```
+
+Der t-Test gibt kein klares Bild:
+
+```{r}
+t.test( yield ~ group, plots )
+```
+
+##### Simulation von Szenario B
+
+Wir haben nun nur 10 Felder, die wir aber in 2 Hälften teilen, die wir "C" und "T" nennen:
+
+```{r}
+plots0 %>% head(10) %>%
+mutate(
+  yield_C = yield_without_fertilizer,
+  yield_T = yield_without_fertilizer + fertilizer_effect
+) %>%
+select( plot, yield_C, yield_T ) -> plotsB
+
+plotsB
+```
+
+```{r}
+plotsB %>%
+pivot_longer( c( "yield_C", "yield_T" ), names_to = "half", values_to="yield" ) %>%
+mutate( half = str_remove( half, "yield_" ) ) -> plotsB_long
+
+plotsB_long %>%
+ggplot( aes( x=half, y=yield ) ) +
+  geom_point() + geom_line( aes( group=plot ) )
+
+```
+
+Wenn wir einen normalen t-Test machen, der die beiden Gruppen vergleicht, haben wir nichts gewonnen:
+
+```{r}
+t.test( yield ~ half, plotsB_long )
+```
+
+Derselbe Test, anders geschrieben:
+
+```{r}
+t.test( plotsB$yield_C, plotsB$yield_T )
+```
+
+Wenn wir aber die Daten "paaren", d.h. jedem C-Wert den zugehörigen T-Wert zuweisen, und einen sog. "gepaarten t-Test" verwenden, dann gewinnen wir:
+
+```{r}
+t.test( plotsB$yield_C, plotsB$yield_T, paired=TRUE )
+```
+
+Was hier betrachtet haben, ist nicht mehr die Differenz der Mittelwerte, sondern der Mittelwert der Differenzen der Werte jedes Feldes.
+
+Der gepaarte t-Test ist äquivalent zum "Ein-Stichproben-t-Test", bei dem wir testen, ob der MIttelwert einer einzelnen Liste von Werten sich signifikant von 0 unterscheidet:
+
+```{r}
+t.test(  plotsB$yield_C - plotsB$yield_T )
+```

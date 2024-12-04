@@ -1,0 +1,46 @@
+---
+title: "Hausaufgabe zum t-Test"
+---
+
+## Aufgabe 1
+
+In einer früheren Hausaufgabe haben wir, für die NHANES-Daten, die mittlere Körpergröße, nach Geschlecht aufgeteilt, gegen das Lebensalter aufgetragen. Es schien als ob bei jüngeren Kindern Mädchen größer sind als Jungen.
+
+### Teilaufgabe a
+
+Berechnen Sie nochmals die Mittelwerte der Körpergröße für Mädchen und Jungen im Alter von 10 Jahren.  Welches Geschlecht ist größer? Denken Sie, dass das nur zufällig in dieser Stichprobe so ist, oder dass dies ein echter Effekt ist, der sich bestätigen würde, wenn man noch mehr 10-jährige Kinder vermessen würde? 
+
+### Teilaufgabe b
+
+Erstellen Sie einen Beeswarm-Plot mit den Körpergrößen der 10-Jährigen, aufgeteilt nach Geschlecht. Zeichnen Sie 95%-Konfidenzintervalle für die beiden Mittelwerte ein.
+
+### Teilaufgabe c
+
+Führen Sie für alle Alterswerte von 2 bis 18 Jahre durch jeweils einen t-Test durch, um die mittlere Körpergröße zwischen den Geschlechtern zu vergleichen. Interpretieren Sie das Ergebnis.
+
+### Teilaufgabe d
+
+Wie viele 10-jährige sollte man mindestens vermessen, um eine klare Antwort auf die Frage zu bekommen, ob in diesem Alter Mädchen oder Jungen im Mittel größer sind? Lässt sich die Frage, so wie sie hier formuliert ist, abschließend beantworten? Wenn nein, welche Schlussfolgerungen möglich sind.
+
+## Aufgabe 2
+
+In einem Tierversuch mit Mäusen soll geklärt werden, ob eine bestimmte Substanz das Wachstum der Herzmuskels stimuliert. Dazu soll Jungtieren, sobald sie nicht mehr gesäugt werden, die Substanz ins Futter gegeben werden, bis sie 12 Wochen alt und somit ausgewachsen sind. Dann wird die Maus getötet, das Herz entnommen und gewogen. 
+
+Für den Versuch stehen 14 Mäuse zur Verfügung, die von 2 Muttertieren geworfen wurden. Je 7 Mäuse sind also Wurfgeschwister ("litter mates"). Nun kommt es zu einer Meinungsverschiedenheit zwischen den beiden Forschern, die das Experiment durchführen.
+
+Forscher A schlägt vor, den einen Wurf als Behandlungsgruppe (treatment group, erhält die Substanz ins Futter gemischt) und den anderen Wurf als Vergleichgruppe (control group, erhält Futter ohne die Substanz) zu verwenden. Forscher B möchte die Würfe durchmischen, so dass sich in beiden Gruppen Mäuse von beiden Muttertieren befinden.
+
+Forscher A erläutert: Wir wissen aus früheren Experimenten, dass das Herz einer ausgewachsenen Maus typischer Weise um die 150 mg wiegt, dieser Wert aber stark schwankt. Die Standardabweichung beträgt etwa 20 mg. Die Herzen zweier Mäuse sind sich aber ähnlicher, wenn die Mäuse Wurfgeschwister sind als wenn sie nicht verwandt sind. Die Standardabweichung der Gewichte der Herzen innerhalb eines Wurfes ist also deutlich kleiner, vielleicht nur um die 12 mg. 
+
+Wir nehmen an, dass diese Zahlen alle so stimmen (auch wenn das vermutlich nicht der Fall ist; ich habe mir die Zahlen ausgedacht).
+
+Forscher A argumentiert nun: Da die statistische Power größer ist, wenn die Standardabweichung innerhalb der Gruppen kleiner ist, wird das Experiment also eine größere Erfolgsaussicht haben, wenn man die Würfe nicht mischt. Also ist es besser, das jeder Wurf eine Gruppe bildet.
+
+Berechnen Sie die statistische Power des Experiments unter der Annahme, dass die Substanz einen sehr starken Einfluss hat, nämlich die Herzmasse um 20 mg erhöht, und dass die von Forscher A angenommenen Standardabweichungen gute Schätzungen sind. 
+
+Hat Forscher A recht, dass sein Versuchsplan mehr statistische Power hat als der von Forscher B?
+
+Fällt Ihnen ein Argument ein, warum das Plan von Forscher B dennoch besser ist?
+
+Wie würden Sie vorgehen?
+

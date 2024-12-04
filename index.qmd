@@ -36,9 +36,18 @@ Wintersemester 2024/25
   - [Histogramme](histograms.html)
   - [Verteilungen](verteilungen.html)
   - [Hausaufgabe, fällig zum 26.11.](hausaufgabe_verteilungen.html)
-- Einfache Inferenz  
-  - [Mittelwerte: Konfidenzintervall und t-Test](confint_ttest.html)
+- [Inferenz zu Mittelwerten](confint_ttest.html)
+  - Standardfehler des Mittelwerts
+  - Konfidenzintervalle für Mittelwerte
+  - t-Tests
+  - gepaarte t-Tests
+  - Permutations-Tests
   - [Hausaufgaben](hausaufgabe_ttest.html), fällig zum 3.12.
+- [Inferenz zu Anteilen](binom.html)
+  - Binomialverteilung
+  - Konfidenzintervalle für binomiale Anteile
+  - Binomial-Test
+  - Fisher-Test
 
 ## Musterlösungen zu den Hausaufgaben
 - zur Hausaufgabe [vom 7.11.](Loesung_Hausaufgabe_2024-11-07.html)
