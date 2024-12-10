@@ -1,0 +1,210 @@
+---
+title: "homework 2611"
+author: "Anna Yermokhina"
+format: html
+embed-resources: true
+---
+
+## Homework 26.11
+
+Aufgabe 1.
+
+```{r}
+library(tidyverse)
+
+popA <- rnorm( 2000, mean=110, sd=20 )
+popB <- rnorm( 2000, mean=120, sd=20 )
+
+sample( popA, 10) -> sampleA
+sample( popA, 10) -> sampleB
+
+meanA = mean(sampleA)
+meanB = mean(sampleB)
+
+difference = meanB - meanA
+difference
+```
+
+Aufgabe 2.
+
+```{r}
+
+diff_vector <-c(
+replicate( 1000, {
+popA <- rnorm( 2000, mean=110, sd= 20)
+popB <- rnorm( 2000, mean=120, sd= 20)
+
+sample( popA, 10) -> sampleA
+sample( popB, 10) -> sampleB
+
+meanA = mean(sampleA)
+meanB = mean(sampleB)
+
+diff = meanB - meanA
+}))
+
+hist(diff_vector, breaks = 30)
+```
+
+alternatives Histogramm um die Verteilungsdichte anzuzeigen
+
+```{r}
+diff_tbl <-
+  tibble(
+    difference = diff_vector) 
+
+diff_tbl %>% 
+ggplot() + 
+  geom_histogram( aes( x = difference, y = after_stat( density)), bins = 20)
+```
+
+Aufgabe 3
+
+für 10 Mäuse:
+
+```{r}
+B_better = sum( diff_vector > 0)
+probability_B = sum( diff_vector > 0)/length( diff_vector)
+
+A_better = sum( diff_vector < 0)
+probability_A= sum( diff_vector  < 0)/length( diff_vector)
+
+A_better
+probability_A
+B_better
+probability_B
+```
+
+für 20 Mäuse:
+
+```{r}
+
+diff_vector <-c(
+replicate( 1000, {
+popA <- rnorm( 2000, mean=110, sd=20)
+popB <- rnorm( 2000, mean= 120, sd=20)
+
+sample( popA, 20) -> sampleA
+sample( popB, 20) -> sampleB
+
+meanA = mean(sampleA)
+meanB = mean(sampleB)
+
+diff = meanB - meanA
+}))
+
+
+B_better = sum( diff_vector > 0)
+probability_B = sum( diff_vector > 0)/length( diff_vector)
+
+A_better = sum( diff_vector < 0)
+probability_A = sum( diff_vector  < 0)/length( diff_vector)
+
+A_better
+probability_A
+B_better
+probability_B
+```
+
+für 200 Mäuse:
+
+```{r}
+diff_vector <-c(
+replicate( 1000, {
+popA <- rnorm( 2000, mean=110, sd=20)
+popB <- rnorm( 2000, mean= 120, sd=20)
+
+sample( popA, 200) -> sampleA
+sample( popB, 200) -> sampleB
+
+meanA = mean(sampleA)
+meanB = mean(sampleB)
+
+diff = meanB - meanA
+}))
+
+diff_tbl <-
+  tibble(
+    difference = diff_vector) 
+
+diff_tbl %>% 
+ggplot() + 
+  geom_histogram( aes( x = difference, y = after_stat( density)), bins= 30)
+
+B_better = sum( diff_vector > 0)
+probability_B = sum( diff_vector > 0)/length( diff_vector)
+
+A_better = sum( diff_vector < 0)
+probability_A = sum( diff_vector  < 0)/length( diff_vector)
+
+A_better
+probability_A
+B_better
+probability_B
+```
+
+Aufgabe 4.
+
+By experimenting with sample size we could assume that collectying around 20 mice from each forest would be sufficient to determine if one of the populations had more nutrition.
+
+However, if we were looking for a specific effect size, it would be great to conduct statistical power analysis.
+
+Statistical power is 1-B, where B is the probability of the type 2 error (the probability not to reject H0 despite it being wrong).
+
+We can use the following formula to find B:
+
+B = P( Z \< Za - diff/sd( diff))
+
+where diff is the difference between the two means, sd( diff) is the standard deviation of the difference and Za is the Z value for our significance level (1.96 for two-sided 95% confidence interval).
+
+To determine sd( diff) we need to know the standard errors of the means: SEM = SD/sqrt( n)
+
+The sd( diff) is a linear combination of the SEMs, because difference = meanB - meanA
+
+sd( diff) = sqrt( SEMa\^2 + SEMb\^2)
+
+Since the sample sizes and standard deviations of both groups are the same, we can simplify:
+
+sd( diff) = sqrt( 2\* SEMa\^2) = sqrt( 2\* (SD/sqrt( n))\^2)) = SD\* sqrt( 2/n)
+
+For example, for 10 mice:
+
+B = P( Z \< Za - diff/sd( diff)) = P( Z \< 1.96 - 10/(SD\* sqrt( 2/n))) =
+
+P( Z \< 1.96 - 10/(20\* sqrt( 2/10))) = P( Z \< 1.96 - 1.11) = P( Z \< 0.85) = 0.8
+
+The power of the experiment with 10 mice from each population and 95% confidence is therefore
+
+1 - 0.8 = 0.2 = 20%
+
+For 20 mice:
+
+B = P( Z \< Za - diff/sd( diff)) = P( Z \< 1.96 - 10/(SD\* sqrt( 2/n))) =
+
+P( Z \< 1.96 - 10/(20\* sqrt( 2/20))) = P( Z \< 1.96 - 1.58) = P( Z \< 0.37) = 0.64
+
+1 - 0.64 = 0.36
+
+In the simulation with 20 mice we would be able to detect the 95% significant difference in about 36% of the cases.
+
+This calculation can be reverted to find out the size of the sample required for a specific power.
+
+For example, for 80% power:
+
+B = 20% = 0.2 = P( Z \< Za - diff/sd( diff))
+
+0.2 = P( Z \< Za - diff/sd( diff))
+
+\- 0.85 = 1.96 - 10/(20\* sqrt( 2/n)))
+
+-2.81 = - 10/(20\* sqrt( 2/n)))
+
+2.81 = 10/(20\* sqrt( 2/n)))
+
+5.62 = 1/sqrt( 2/n) = sqrt( n/2)
+
+n/2 = 5.62\*5.62 = 31.6
+
+n = 31.6\*2 = 63.1
+
+Therefore, to achieve 80% statistical power for 95% significance level we would have to collect at least 64 mice from each forest.
