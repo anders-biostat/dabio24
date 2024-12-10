@@ -6,6 +6,7 @@ In dieser Aufgabe simulieren wir ein Experiment uns sein Auswertung. Bei unserem
 
 Wir versetzen uns zunächst in die Rolle eines allwissenden Dämons, der das Gewicht aller Wühlmäuse kennt. (Der Begriff "Dämon" für ein solchen allwissend gedachten Wesens geht auf S. Laplace zurück.) Der Dämon erstellt für beide Wälder jeweils ein Histogramm der Körpergewichte der ausgewachsenen Wühlmäuse und erkennt, dass diese sehr gut durch eine Normalverteilung beschrieben sind, und zwar mit Mittelwert 110 g für Wald A und Mittelwert 120 g für Wald B. Die Standardabweichung sei bei beiden Verteilungen 20 g.
 
+1234
 ### 1.
 
 Wald A enthält 2000 Wühlmäuse. Mit `popA <- rnorm( 2000, mean=90, sd=20 )` können wir R anweisen, einen Vektor mit 2000 Zufallszahlen zu generieren, die aus eine Normalverteilung mit den angegebenen Parametern gezogen werden. Wir nennen den Vektor `popA` für "population of forest A". Ebenso können wir die Grundgesamtheit der (ausgewachsenen) Wühläuse in Wald B erzeugen.
