@@ -1,0 +1,114 @@
+---
+title: "Lineare Regression"
+---
+
+### Beispieldaten
+
+Wir möchten wissen, ob das Gewicht eiens Samens einen Einfluss auf das Wachstum einer Pflanze hat.
+Wir wiegen 50 Samen, pflanzen sie ein, warten 4 Wochen, und messen dann die Höhe der Pflanze.
+
+Der folgende Code erstellt Beispiel-Daten
+
+```{r}
+set.seed( 1325 )
+
+tibble( seed_weight = rnorm( n=50, mean=50, sd=10 ) ) %>%
+mutate( plant_height = rnorm( n=50, mean=30, sd=5 ) + 0.1*seed_weight ) -> plant_data
+```
+
+Unsere Samen wiegen also im Schnitt 50 mg mit Standardabweichung 10 mg. Die Pflanzen werden im Schnitt 30 cm hoch mit einer (vom Gewichtd es Samens unabhägigen) Standardabweichung von 5 cm. Dazu kommt ein Effekt von Effekt von 0.03 cm extra für jedes mg Samen-Gewicht.
+
+Hier ist ein Plot:
+
+```{r}
+ggplot(plant_data) + geom_point( aes( x=seed_weight, y=plant_height ) )
+```
+
+### Fitten eines linearen Modells
+
+```{r}
+fit <- lm( plant_height ~ seed_weight, plant_data )
+fit
+```
+
+Die Werte der Koeffizienten können wir aus dem `fit`-Objekt entnehmen:
+
+```{r}
+coef(fit)
+```
+
+Unser Fit ergibt also folgende Formel für den fitted value für die Höhe $y_i$ (in cm) von Pflanze $i$:
+
+$$ \hat y_i = 31.4 + 0.067 x_i, $$
+wobei $x_i$ das Gewicht des Samens in mg ist. 
+
+### Regressionsgerade
+
+Wir zeichnen dies in unseren Plot ein:
+
+```{r}
+ggplot(plant_data) + 
+  geom_point( aes( x=seed_weight, y=plant_height ) ) +
+  geom_abline( intercept = coef(fit)[["(Intercept)"]], slope = coef(fit)[["seed_weight"]] )
+```
+Diese Linie ("Ausgleichsgerade", "Regressionsgerade") ist den Daten angepasst (fitted to the data), in dem Sinne,
+dass die Residuen-Quadratsumme $\text{RSS} = (y_i - \hat y_i)^2$ minimiert wurde.
+
+### Signifikanz
+
+Wieviel Varianz wird erklärt, und ist das signifikant?
+
+```{r}
+summary(fit)
+```
+
+Ja.
+
+Die Steigung ist aber deutlich zu groß. Wie imemr sollten wir aber uns nicht auf die Punktschätzung verlassen, sondern ein Konfidenzintervall berechnen. Die Tabelle oben enthält bereits eine Standardfehler für den Koeffizienten, und die Funtion `confint` berechnet ein 95%-Konfidenzintervall:
+
+```{r}
+confint( fit )
+```
+
+Hier ist der Code nochmal zusammen gestellt. Durch mehrfaches ausführen können wir sehen, wie das Ergebnis variieren kann.
+
+```{r}
+tibble( seed_weight = rnorm( n=50, mean=50, sd=10 ) ) %>%
+mutate( plant_height = rnorm( n=50, mean=30, sd=5 ) + 0.1*seed_weight ) -> plant_data
+
+fit <- lm( plant_height ~ seed_weight, plant_data )
+
+ggplot(plant_data) + 
+  geom_point( aes( x=seed_weight, y=plant_height ) ) +
+  geom_abline( intercept = coef(fit)[["(Intercept)"]], slope = coef(fit)[["seed_weight"]] )
+
+coef(fit)
+
+confint(fit)
+
+summary(fit)
+```
+
+### Wachstum von Kindern
+
+Wir laden die NHANES-Daten und filtern auf die Kinder (bis 15 Jahre):
+
+```{r message=FALSE}
+read_csv( "data_on_git/nhanes.csv" ) %>%
+filter( age < 16, !is.na(height) ) -> nhanes_children
+```
+
+Nun fitten wir ein lineares Modell:
+
+```{r}
+fit <- lm( height ~ age, nhanes_children )
+fit
+```
+
+Wir plotten dies:
+
+```{r}
+ggplot( nhanes_children ) +
+  geom_point( aes( x=age, y=height, col=gender ), size=.3, position=position_jitter(width=.2,height=0) ) +
+  geom_abline( intercept = coef(fit)["(Intercept)"], slope=coef(fit)["age"] )
+```

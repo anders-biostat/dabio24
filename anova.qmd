@@ -1,0 +1,289 @@
+---
+title: "ANOVA"
+---
+
+ANOVA = Analysis of Variance
+
+## One-way-ANOVA
+
+### Einführendes Beispiel
+
+```{r message=FALSE}
+library( tidyverse )
+
+read_csv("data_on_git/nhanes.csv") %>%
+filter( age >= 18, !is.na(height) ) -> nhanes_adults
+```
+
+Unterscheidet sich in unseren NHANES-Daten die Körpergröße zwischen den Ethnien? 
+Hat die Ethnie einen Einfluss auf die Körpergröße?
+
+```{r}
+nhanes_adults %>%
+group_by( ethnicity ) %>%
+summarise( mean(height) )
+```
+
+Ist das statistisch singifikant?
+
+Wir könnten t-Tests zwischen allen Paaren von Ethnien vornehmen, aber so genau brauchen wir es nicht. Wir möchten nur wissen, ob die Ethnie einen Einfluss hat, nicht, welche Ethnien größer und welche kleiner sind.
+
+### Vorbereitung: Wiederholung zur Varianz
+
+Wir erinnern uns, wie die Varianz einer Liste von Werten, $x_1,\dots,x_i,\dots,x_n$ berechnet wird:
+
+- Man bestimmt zunächst den Mittelwert $\mu=\frac{1}{n}\sum_i x_i$.
+
+- Dann bestimmt man die Abweichung jedes Einzelwerte vom Mittelwert. Man erhält die sog. Residuen $r_i=x_i-\mu$.
+
+- Man quadriert die Residuen und addiert die quadrierten Residuen: $\text{SS} = \sum_i r_i^2 = \sum_i (x_i-\mu)^2$. Diesen Wert nennt man die Quadratsumme der Residuen (residual sum of squares, RSS, oder einfach nur sum of squares, SS)
+
+- Die Varianz ist der Mittelwert der quiadrierten Residuen. 
+
+- Allerdings berechnet man den Mittelwert nicht, wie üblich, indem man die Quadratsumme durch $n$ teilt, sondern man teilt durch $n-1$ (Besselsche Korrektur), um die Verzerrung (bias) auszugleichen, die dadurch entsteht, dass der Mittelwert, den man abgezogen hat, nicht der Mittelwert der Grundgesamtheit, sondern der der Stichprobe ist, und daher die Quadratsumme etwas zu klein ist. Durch die Besselsche Korrektur wird die so geschätze Varianz erwartungstreu (unbiased), d.h., im Mittel über viele Stichproben ist sie gleich der wahren varianz der Grundgesamtheit.
+
+Wenn wir in o.g. Verfahren den Mittelwert $\mu$ durch irgendeinen anderen Wert ersetzt, wird die Quadratsumme größer, wie der folgende Satz aussagt:
+
+Die Quadratsumme der Abweichungen einer Liste von Werten $x_i$ von einem vorgegebenen Wert $\mu$, also $\sum_i(x_i-\mu)^2$ wird minimal, wenn $\mu$ der Mittelwert der $x_i$ ist.
+
+### Quadratsummen und Bestimmtheitsmaß
+
+Wir berechnen die Quadratsumme für die Körpergrößen in der NHANES-Tabelle gegen den Mittelwert:
+
+```{r}
+nhanes_adults %>%
+mutate( mean_height = mean(height) ) %>%  
+mutate( residual = height - mean_height ) %>%
+summarize( TSS = sum( residual^2 ) )
+```
+
+Diesen Wert bezeichnet man als "total sum of squares" (TSS).
+
+Nun wiederholen wir diese Rechnung, ziehen aber nicht den globalen Mittelwert ab, sondern den Mittelwert der jeweiligen Ethnie
+
+```{r}
+nhanes_adults %>%
+group_by( ethnicity ) %>%
+mutate( mean_height = mean(height) ) %>%  
+mutate( residual = height - mean_height ) %>%
+ungroup() %>%
+summarize( RSS = sum( residual^2 ) ) 
+```
+
+Diese Quadratsumme heißt "residual sum of squares" (RSS).
+
+Die Quadratsumme wurde um 6.8% reduziert, und es verbleiben 93.2%
+
+```{r}
+513931.8 / 551603.5
+```
+
+Man sagt: Der Faktor "Ethnie" erklärt 6,8% der Varianz der Körpergröße. Der Wert 0.068 wird auch gerne als "Bestimmtheitsmaß" (coefficient of determination) oder $R^2$ bezeichnet.
+
+Allerdings ist das Verb "erklären" nicht ganz angemessen, denn auch ein zufälliger Faktor scheint Varianz zu erklären. 
+
+Um dies zu sehen, wiederholen wir die Berechnung von RSS, permutieren aber vorher die Ethnie-Labels:
+
+```{r}
+nhanes_adults %>%
+mutate( ethnicity = sample(ethnicity) ) %>%   # <- Permutation
+group_by( ethnicity ) %>%
+mutate( mean_height = mean(height) ) %>%  
+mutate( residual = height - mean_height ) %>%
+ungroup() %>%
+summarize( RSS = sum( residual^2 ) ) 
+```
+
+```{r echo=FALSE}
+perm_rss <- pull(.Last.value)
+```
+
+Nun "erklären" wir etwa 0,14% der Varianz (wieder berechnet als (TSS-RSS)/TSS).
+
+Damit wir wirklich sagen können, dass der Faktor "Ethnie" einen Einfluss auf die Körpergröße hat, sollte das Bestimmtheitsmaß also signifikant über diesem Wert liegen.
+
+### Die F-Statistik
+
+Die F-Statstik ergibt sich nach folgender Formel:
+
+$$ F = \frac{{(\text{TSS}-\text{RSS})/(k-1)}}{\text{RSS}/(n-1)} = R^2 \cdot \frac{n-1}{k-1}$$
+Hierbei ist $n$ die Anzahl der Werte (bei uns $n=$`{r} nrow(nhanes_adults)`) und $k$
+die Anzahl der Gruppen (bei uns $k=6$ Ethnien).
+
+Die F-Statistik ist so konstruiert, dass sie den Erwartungswert 1 hat, wenn die Gruppen-Zuordnung zufällig ist oder keinen Einfluss auf den Wert hat. Wie stark $F$ um den Erwartungswert 1 schwankt, wenn die Nullhypothese (Gruppenzugehörigkeit hat keinen Einfluss) zutrifft, wird durch die $F$-Verteilung beschrieben, die durch $k-1$ und $n-1$ parametrisiert ist. 
+
+Bei uns ergibt sich $F=79.7$. Das ist ein extrem hoher Wert. Das ein so hoher Wert unter der Nullhypothese auftaucht, ist extrem unwahrscheinlich, der p-Wert dafür, dass die Ethnie wirklich einen Einfluss auf die Körpergröße hat, ist also sehr klein.
+
+### Lineares Modell mit R
+
+In R können wir all diese Berechnung mit der Funktion `lm` durchführen:
+
+```{r}
+fit <- lm( height ~ ethnicity, nhanes_adults )
+
+fit
+```
+
+Hier hat R zunächst nur die Mittelwerte berechnet. Eine Ethnie (nämlich "Mexican", weild as im Alphabet als erstes kommt) wurde als Referenz (base level) gewählt, und der Mittelwert hierzu steht bei "Intercept". Die Abweichungen der anderen Mittelwerte von der Referenz kommen danach.
+
+Wenn wir die Funktion `summary` auf das Ergebnis von `lm` anwenden, erhalten wir $F$ und $R^2$:
+
+```{r}
+summary( fit )
+```
+
+Wir ignorieren die Tabelle zunächst, und sehen nur auf die letzten beiden Zeilen.
+
+Wie sehen das Bestimmtheitsmaß, $R^2$, den $F$-Wert und den zughörigen $p$-Wert, 
+also die Wahrscheinlichkeit, mit der man einen mindestens so großen F-Wert unter
+Annahme der Nullhypothese erhalten würde.
+
+### Weiteres Beispiel
+
+Wir konstruieren uns ein Beispiel.
+
+Wir nehmen an, dass wir in unserem Wald 60 Wühlmäuse gefangen und gewogen haben und bemerkt haben, dass sich diese durch die Fellfarbe unterscheiden. Wir fragen uns, ob die Fellfarbe einen Einfluss auf das gewicht hat. Tatsächlich sind die gelblichen Mäuse im Mittel ein kleines bisschen schwerer.
+
+```{r}
+set.seed( 1324 )
+
+bind_rows(
+  tibble( mass = rnorm( 30, mean=12, sd=4 ), coat = "gray" ),
+  tibble( mass = rnorm( 20, mean=15, sd=4 ), coat = "yellowish" ),
+  tibble( mass = rnorm( 20, mean=12, sd=4 ), coat = "darkgray" ),
+  tibble( mass = rnorm( 15, mean=12, sd=4 ), coat = "brown" ) ) -> mouse_data
+```
+
+
+
+```{r}
+summary( lm( mass ~ coat, mouse_data ) )
+```
+Hier ist der F-Wert zu klein, und der p-Wert zu hoch, als dass wir sicher sagen könnten, 
+dass Fellfarbe und Gewicht verbunden sind.
+
+### Adjustiertes Bestimmtheitsmaß
+
+Wie wir oben gesehen haben, ist das Bestimmtheitsmaß auch bei Zutreffen der Nullhypothese nicht 0.
+
+Durch eine Adjustierungs-Formel kann es so umgerechnet werden, dass es unter der Nullhypothese den Erwartungswert 0 hat. Dies ist das "adjusted R-squared" in der Formel oben.
+
+## Two-way ANOVA
+
+Wir können auch den Einfluss mehrerer Kovariaten auf die Körpergröße untersuchen:
+
+```{r}
+fit <- lm( height ~ ethnicity + gender, nhanes_adults )
+fit
+```
+
+Das Referenz-Level ist nun die Merkmalskombination `ethnicity=="Mexican"` und `gender=="female"`. Der erwartete Wert hierzu wird als "Intercept" bezeichnet. Den erwarteten Werte für alle anderen Merkmalskombination erhält man, indem man zum Intercept die Angegebenen Ethnie-Koeffizienten hinzu addiert (oder nichts addiert, falls die Ethnie "Mexican" ist) und den Gender-Koeffizienten für "male" hinzuzählt, falls man nicht bei "female" ist.
+
+Für jeden Probanden $i$ können wir nun anhand dessen Merkmale (Ethnie und Geschlecht) einen "gefitteten Wert" (fitted value) $\hat y_i$ berechnen, der sich aus den Koeffizienten wie eben beschrieben ergibt. Probanden mit denselben merkmalen haben denselben fitted value.
+
+Die RSS wird jetzt berechnet als die Sumem der quadrierten Abweichung der gefitteten Werte $\hat y_i$ von den tatsächlichen Werten $y_i$ der Körpergröße der Probanden: $\text{RSS} = \sum_i (y_i - \hat y_i)^2$.
+
+Die Koeffizienten wurden von `lm` so bestimmt, dass die sich aus ihnen ergebenden fitted values die RSS minimieren.
+
+Dies nennt man die Methode der kleinsten Quadrate (least squares fit).
+
+Wenn man nur einen Faktor hat, gibt es pro Gruppe einen Koeffizienten, und die gefitteten Werte sind die Mittelwerte der Gruppen
+
+Hier haben wir 12 Gruppen (6 Ethnien und 2 Geschlechter), aber nur 7 Koeffizienten. Daher sind die gefitteten Werte nicht die Gruppen-Mittelwerte.
+
+Die `lm`-Funktion muss also einen Ausgleich (fit) schaffen zwischen den beiden Faktoren.
+
+### F-Test
+
+Wir können für jeden Faktor getrennt feststellen, ob er hinreichend Varianz erklärt. Dazu dient die Anova-Tabelle:
+
+```{r}
+anova(fit)
+```
+
+### Weiteres Beispiel
+
+Wir kommen zurück zu unseren Mäusen. Wir machen die gelblichen Mäuse etwas schwerer als zuvor und weisen jeder Maus ein Geschlecht zu:
+
+```{r}
+set.seed( 1324 )
+
+bind_rows(
+  tibble( mass = rnorm( 30, mean=12, sd=4 ), coat = "gray" ),
+  tibble( mass = rnorm( 20, mean=16, sd=4 ), coat = "yellowish" ),
+  tibble( mass = rnorm( 20, mean=12, sd=4 ), coat = "darkgray" ),
+  tibble( mass = rnorm( 15, mean=12, sd=4 ), coat = "brown" ) ) %>%
+mutate( sex = sample( c("male","female"), n(), replace=TRUE ) ) -> mouse_data
+
+fit <- lm( mass ~ coat + sex, mouse_data )
+fit
+```
+
+Die Anova-Tabelle soltle ergeben, dass das geschlecht keinen Einfluss auf das Gewicht hat (da wir es ja zufällig zugewiesen haben):
+
+```{r}
+anova(fit)
+```
+
+Wir sehen uns auch die Koeffizienten noch mal an. 
+
+Für später wird es nützlich sein, schon jetzt folgendes zu veranschaulichen:
+
+Für jede Maus bestimmen wir den "fitted value" als
+
+$$ \hat y_i = \beta_0 + \beta_\text{darkgray}x_{i,\text{darkgray}}+ \beta_\text{gray}x_{i,\text{gray}}+ \beta_\text{yellowish}x_{i,\text{yellowish}} + \beta_\text{male}x_{i,\text{male}}$$
+Hier sind die $beta$ die Koeffizienten udn die $x_i$ sind "Indikator-Variablen", die 1 sind, falls das entsprechende Merkmal bei Maus $i$ vorliegt und sonst 0.
+
+Die Methode der kleinsten Quadrate bedeutet, dass `lm` diejenigen Werte für die $\beta$ gesucht hat, die $\text{RSS}=(y_i-\hat y_i)^2$ so klein wie möglich macht.
+
+### Terminologie
+
+- Die Variablen, für die man Koeffizienten sucht (hier: `ethnicity` und `gender` bzw. `sex` und `coat`) heißen unabhängige Variable (independent variables), Kovariaten (covariates), oder Prediktoren (predictors). Sie stehen im `lm`-Aufruf rechts der Tilde.
+
+- Die Variable, deren Varianz man erklären will (hier: `height` bzw. `mass`) heisst abhängige Variable (dependent variable) oder Response.
+
+- Die Werte für $\beta$ heißen Koeffizienten (coefficients).
+
+- Die $\hat y_i$ heißen "fitted values", und die Abweichung der tatsächlichen Werte der abhängigen Variablen von ihren fitted values,  also $y_i-\hat y_i$, heissen Residuen (residuals).
+
+- Die Matrix, die durch die $x$ gebilder wird, heißt Design-Matrix oder Modell-Matrix.
+
+### Interactions
+
+Wir betrachten folgendes Modell:
+
+```{r}
+lm( height ~ ethnicity + gender, nhanes_adults )
+```
+Der Fit hat ergeben, dass Mqnner im Schnitt 13,6 cm größer sind als Frauen. Gilt das für alle Ethnien? Oder gibt es Ethnien, wo der Unterschied zwischen Männern und Frauen größer oder kleiner ist als bei anderen Ethnien.
+
+Hängt also der Unterschied zwischen den Geschlechtern von der Ethnie ab? In diesem Fall spricht man von einer Wechselwirkung (interaction) der beiden Faktoren.
+
+Mit `lm` testet man das wie folgt:
+
+Man fittet ein Modell mit Wechselwirkung, indem man einen Stern zwischen die möglicherweise wechselwirkenden Faktoren setzt:
+
+```{r}
+fit <- lm( height ~ ethnicity * gender, nhanes_adults )
+fit
+```
+
+Nun fragt man, ob das Hinzunehmen der zusäztlcihen Koeffizienten für dei Wechselwirkung den Fit signifikant
+verbessert hat
+
+```{r}
+anova(fit)
+```
+
+Nein, die Wechselwirkung ist nicht signifikant.
+
+### Post-hoc-Test
+
+Wir haben gesehen, dass die Körpergröße von der Ethnie abhängt. Aber welche Ethnien unterscheiden sich?
+
+Dies findet man mit Tukey's "Honest Significant Differences"-Test heraus:
+
+```{r}
+fit <- lm( height ~ ethnicity + gender, nhanes_adults )
+TukeyHSD( aov(fit) )
+```

@@ -1,0 +1,109 @@
+---
+title: "Multiple Hypothesen-Tests"
+---
+
+(multiple hypothesis testing)
+
+### Family-wise error-rate (FWER) und Bonferroni-Korrektur
+
+Beispiel: Ein Forschungsteam möchte den Einfluß von 10 verschiedenen Stoffen auf das Wachstum von Pflanzen testen.
+
+Versuchsaufbau: Für jeden Stoff werden 50 Pflanzen gesetzt, und der Stoff wird dem Gießwasser zugegeben. Außerdem werden Vergleichspflanzen herangezogen, die keinen Zusatz erhalten. Dann wird für jeden Stoff ein t-test durchgeführt, um die Masse der herangewachsenen Pflanzen, die den Stoff erhalten haben, mit den Vergleichspflanzen zu erhalten. So erhalten wir 10 p-Werte.
+
+Vorab wurde festgelegt: Wenn bei einem Stoff der t-Test einen p-Wert unter 0,05 erzielt wird, soll gefolgert werden, dass der Stoff das Wachstum beeinflust.
+
+Wir betrachten die gemeinsame Nullhypothese: "Keiner der 10 Stoffe hat einen Einfluss auf das Wachstum." Unter Annahme dieser Nullhypothese: Was ist die Wahrscheinlichkeit, bei mindestens einem Stoff einen p-Wert unter 0,05 zu erhalten?
+
+Rechnung:
+
+- Für jeden einzelnen Stoff jeweils (unter Annahme der Nullhypothese):
+
+  - Wahrscheinlichkeit, dass der Stoff einen p-Wert unter 0,05 erhält: 0,05
+
+  - Wahrscheinlichkeit, dass der Stoff einen p-Wert *über* 0,05 erhält: 0,95
+  
+- Für alle 10 Stoffe zusammen (unter Annahme der Nullhypothese):   
+
+  - Wahrscheinlichkeit, dass alle 10 Stoffe einen p-Wert über 0,05 erhalten (unter Annahme der Nullhypothese): $0,\!95^{10}=0,\!60$
+
+  - Wahrscheinlichkeit, dass min. einer der Stoffe einen p-Wert unter 0,05 erhalten (unter Annahme der Nullhypothese): $1-0,\!95^{10}=0,\!40$
+  
+Also: Auch unter Annahme der Nullhypothese ist es nicht unwahrscheinlich, dass man aus dem Experiment folgern wird, dass min. einer der Stoffe einen Effekt hat.
+
+Wenn man mehrere Hypothesen testet ("multiple hypothesis testing"), ist die Wahrschinlichkeit groß, dass man glaubt, etwas zu finden, auch wenn da nichts wahr. Man sagt: die "family-wise error rate" (FWER) kann hoch sein.
+
+Bonferroni's pragmatische Lösung: Wenn wir $n$ Hypothesen testen, dann sollten wir unseren Grenzwert für den p-Wert durch $n$ teilen, also hier für jeden Stoff fordern, dass der p-Wert nicht nur unter 0,05 sondern unter 0,05/10=0,005 liegt.
+
+Damit ist bei Annahme der (gemeinsamen) Nullhypothese die Wahrscheinlichkeit, mindestens einen der Stoffe fälschlich für wirksam zu halten, $1-0,\!995^{10}=0,049$, was nah an dem Wert liegt, den wir vorher für akzeptabel gehalten haben.
+
+Diese Vorgehen nennt man Bonferroni-Anpassung für mehrfaches Testen ("Bonferroni's adjustment for multiple testing").
+
+### Forscher-Freiheitsgrade
+
+(researcher degrees of freedom)
+
+Im o.g. Beispiel ist klar, wie viele Hypothesen getestet wurden: eine pro Stoff.
+
+Oft testet man aber sehr viel mehr Hypothesen, als man sich eingesteht, weil man eine Vielzahl von Analysen ausprobiert, und verwirft, bevor man die Analyse durchführt, über die man dann berichtet.
+
+Dann ist $n$ deutlich größer als es den Anschein hat.
+
+Deshalb wird z.B. bei klinischen Studien zur Zulassung eines neuen Medikaments gefordert, dass man schon vor Durchführung der Studie einen Analyseplan verfasst und hinterlegt, der u.a. Anzahl und Art der durchzuführenden Tests festlegt. 
+
+### False discovery rate (FDR) und Benjamini-Hochberg-Anpassung
+
+Wenn man sehr viele Hypothesen hat, verliert man durch die Bonferroni-Anpassung zu viel statistische Power.
+
+Beispiel: Wir haben Gewebeproben von Tumoren von 20 Patienten, und für jeden Tumor Proben von benachbartem gesunden Gewebe zum Vergleich.
+
+Für jede der 40 Proben bestimmen wir mittels mRNA-Sequenzierung die Expressionsstärke von $n=20.000$ Genen. (Expressionsstäkre bedeutet hier: molarer Anteil der mRNA des jeweiligen Gens an aller mRNA in der Probe.)
+
+Nun führen wir für jedes Gen einen gepaarten t-Test (Tumor- vs gesundes Gewebe) durch und erhalten so 20,000 p-Werte. 
+
+Bonferronis Vorschlag würde bedeuten, dass wir unsere p-Wert-Grenze vom üblichen Wert 0,05 auf $0,\!05/20.000=2,\!5\cdot 10^{-6}$ senken müssen. Nur sehr wenige Gene haben einen p-Wert unterhalb dieser sehr niedrigen Schwelle. Wenn wir uns mit dieser kurzen Liste an differentiell exprimierten Genen zufrieden geben, dann können wir uns einigermaßen sicher sein, dass die Liste keien falsch positiven Ergebnisse enthält.
+
+Benjamini und Hochberg argumentieren nun: Häufig sind ein paar falsch positive Einträge in der Positiv-Liste akzeptabel, solange man sicher ist, dass es nicht zu viele sind. Sie schlagen daher folgendes Vorgehen vor:
+
+Wir wählen einen Grenzwert für die p-Werte, z.B., $\theta=0,\!01$ und erklären alle Gene mit $p<\theta$ für signifikant und schreiben sie auf unsere Ergebnisliste. Nehmen wir für unser Beispiel an, dass 1000 der 20,000 Gene einen p-Wert unter $\theta=0,\!01$ haben und somit auf unserere Liste signifikant differentiell exprimierter Gene  (DGEs) kommen.
+
+Wie viele falsch-positive Gene müssen wir mit diesem Vorgehen erwarten? Wir nehmen den worst-case an, nämlich dass die Nullhypothese für alle Gene zutrifft. Dann wird ein Anteil $\theta$ der Gene einen p-Wert unter $\theta$ haben, bei uns also $\theta n=200$. Im worst-case wird die Liste also ungefähr 200 falsch-positive Einträge enthalten.
+
+Das sind 200/1000 = 20% alle Einträge. Unsere "false dicovery rate" (FDR) beträgt also 20%.
+
+Wenn wir das für zu hoch halten, wählen wir einen kleineren Wert für $\theta$, erstellen eine neue Liste, und wiederholen die Rechnung, bis die FDR einen akzeptablen Wert hat.
+
+In der Praxis geht man etwas anders vor: Man fragt für jedes einzelne Gen: Was wäre die FDR, wenn ich die p-Wert-Grenze genau hier setzen würde, wenn ich also den p-Wert dieses Gens als Wert für $\theta$ nehmen würde? Diesen Wert nennen wir den Benjamini-Hochberg-angepassten p-Wert ("BH-adjusted p value").
+
+Wir können dann eine FDR wählen und alle Gene auf die Liste schreiben, deren BH-adjustierte p-Wert unter der gewünschten FDR liegt.
+
+(Mathematisches Detail:  In der o.g. Beschreibung zur BH-Amnpassung fehlt ein Detail, nämlich folgende Regel: Wir sortieren die Gene nach ihrem nominalen (d.h., nicht adjustierten) p-Wert und überprüfen, ob die adjustierten p-Werte auch ansteigen. Wenn ein Gen einen kleineren adjustierten p-Wert hat als ein anderes Gen, das früher in der List kommt, erhält es den adjustierten p-Wert des anderen gens, so dass die Liste der adjustierten p-Werte danach von Gen zu Gen stets ansteigt oder gleich bleibt, aber nie abnimmt.)
+
+In R berechnet die Funktion `p.adjust( p, method="BH" )` einen Vektor mit BH-adjustierten p-Werten, wenn man einen Vektor `p` mit nominalen p-Werten übergibt.
+
+### Publication bias
+
+(Publikations-Verzerrung)
+
+Als allwissender Dämon oder Gott der Wissenschaft beobachten wir, vom Olymp herabschauend, 100 Forschungsteams, die alle gerade Experimente planen. Jedes Team hat eine Hypothese aufgestellt und plant ein Experiment, um die Hypothese zu testen. Die Hypothesen können zu völlig verschiedenen Themen sein; ihnen ist aber gemein, dass am Ende jedes Experiments eine statistische Analyse steht, surch die ein p-Wert errechnet wird. Die Nullhypothesen sind jeweils, dass ein vermuteter Zusammenhang nicht besteht.
+
+Alle Teams sind der Meinung, dass ein p-Wert unter 5% bedeutet, dass der vermutete Zusammenhang zwischen einer möglichen Ursache und ihrer vermuteten Wirkung echt ist. Wenn sie also einen p-Wert unter 5% erhalten, dann werden sie ein Paper veröffentlichen, in dem sie die Entdeckung dieses Zusammenhangs vermelden. Wenn der p-Wert aber über 5% ist, werden sie sich eingestehen, dass ihr Experiment keine neue Erkenntnis gebracht hat und nichts veröffentlichen.
+
+Als allwissender Dämon wissen wir, dass 20 der Teams tatsächlich eine zutreffende Hypothese aufgestellt hat, während die anderen 80 Teams mit ihren Hypothesen falsch liegen.
+
+Von den 20 Teams mit den richtigen Hypothesen erzielen 15 Teams einen p-Wert unter 5% und schreiben ein Paper. 5 Teams hatten Pech oder zu wenig statistische Power.
+
+Bei den 80 Teams, bei denen die Nullhypothese zutrifft, erwarten wir, dass 5%, also 4 Teams, dennoch einen p-Wert unter 5% erhalten und deshalb ein Paper schreiben, indem sie ihre vermeintliche Entdeckung verkünden.
+
+Folglich erscheinen 19 Paper, von denen 4, also 21%, falsch sind.
+
+Obwohl wir eine p-Wert-Grenze von 5% verwendet haben, ist --aus der Sicht der Leser der Fachliteratur-- der Anteil falscher Ergebnisse also 21%!
+
+In vielen wissenschaftlichen Disziplinen ist es üblich, den Wert 5% als harte Grenze für p-Werte anzusehen, und Experimente, die einen p-Wert unter 5% erzielen, als ausreichenden Beweis der Hypothese anzusehen. 
+
+Die o.g. Überlegung zeigt, dass dies naiv ist. 
+
+J. Ioannidis fasste dies 2005 zusammen im viel diskutierten [Artikel](https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.0020124) "Why Most Published Research Findings Are False".
+
+Die American Statistical Association veröffentlichte in 2016 ein "Statement on Statistical Significance and P-Values" ([Link](https://amstat.tandfonline.com/doi/full/10.1080/00031305.2016.1154108#d1e385), Statement beginnt nach Supplement zur Einleitung). Der zugehörige Artikel verweist auf eine Vielzahl von Arbeiten zum Thema.
+
+xkcd ist, wie immer, relevant: [#1478](https://xkcd.com/1478/), [#882](https://xkcd.com/882/)
