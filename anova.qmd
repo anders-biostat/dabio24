@@ -168,6 +168,19 @@ Wie wir oben gesehen haben, ist das Bestimmtheitsmaß auch bei Zutreffen der Nul
 
 Durch eine Adjustierungs-Formel kann es so umgerechnet werden, dass es unter der Nullhypothese den Erwartungswert 0 hat. Dies ist das "adjusted R-squared" in der Formel oben.
 
+### One-way-ANOVA und t-Test
+
+Wenn man nur zwei Gruppen hat, ist der p-Wert aus einer ANOVA derselbe wie der p-Wert aus einem Student-t-Test:
+
+```{r}
+bind_rows(
+  tibble( value = rnorm( 20, mean=10, sd=2 ), group="A" ),
+  tibble( value = rnorm( 20, mean=12, sd=2 ), group="B" ) ) -> example_data
+
+summary( lm( value ~ group, example_data ) )
+t.test( value ~ group, example_data, var.equal=TRUE )
+```
+
 ## Two-way ANOVA
 
 Wir können auch den Einfluss mehrerer Kovariaten auf die Körpergröße untersuchen:
@@ -277,7 +290,7 @@ anova(fit)
 
 Nein, die Wechselwirkung ist nicht signifikant.
 
-### Post-hoc-Test
+## Post-hoc-Test
 
 Wir haben gesehen, dass die Körpergröße von der Ethnie abhängt. Aber welche Ethnien unterscheiden sich?
 

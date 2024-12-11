@@ -9,3 +9,8 @@ div.imp {
 span.imp {
   border-bottom: 5px solid orange;
 }
+
+div.aufgabe {
+  color: darkgreen;
+  font-style: italic;
+}

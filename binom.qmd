@@ -195,7 +195,7 @@ Unser Permutations-p-Wert ist also
 
 Statt durch Permutationen zu simulieren, können wir die Wahrscheinlichkeit auch exakt berechnen, indem wir in ein *Urnenmodell* übersetzen: Eine Urne enthält 400 Kugeln, von denen 322 rot markiert sind. Wir ziehen 200 Kugeln (ohne Zurücklegen). Wie wahrscheinlich ist es, dass unter den gezogenen Kugeln mindestens 170 markierte Kugeln sind?
 
-Die Antwort liefert die Formel für "Ziehen mit Zurücklegen ohne Reihenfolge", d.h., die hypergeometrische Verteilung:
+Die Antwort liefert die Formel für "Ziehen ohne Zurücklegen ohne Reihenfolge", d.h., die hypergeometrische Verteilung:
 
 ```{r}
 phyper( 170-1, 322, 78, 200, lower.tail=FALSE )

@@ -64,11 +64,28 @@ summary(fit)
 
 Ja.
 
-Die Steigung ist aber deutlich zu groß. Wie imemr sollten wir aber uns nicht auf die Punktschätzung verlassen, sondern ein Konfidenzintervall berechnen. Die Tabelle oben enthält bereits eine Standardfehler für den Koeffizienten, und die Funtion `confint` berechnet ein 95%-Konfidenzintervall:
+Die Steigung ist aber deutlich zu groß. Wie immer sollten wir uns aber nicht auf die Punktschätzung verlassen, sondern ein Konfidenzintervall berechnen. Die Tabelle oben enthält bereits eine Standardfehler für den Koeffizienten, und die Funtion `confint` berechnet ein 95%-Konfidenzintervall:
 
 ```{r}
 confint( fit )
 ```
+
+### Korrelationskoeffizient
+
+Das Bestimmtheitsmaß $R^2$, dass wir oben erhalten haben, ist das Quadrat des Pearson-Korrelationskoeffizienten:
+
+```{r}
+cor( plant_data$seed_weight, plant_data$plant_height )
+
+cor( plant_data$seed_weight, plant_data$plant_height )^2
+```
+
+Zur Erinnerung, die Formel für den Pearson-Korrelationskoeffizient einer Liste von Werte-Paaren $(x_i,y_i)$ mit Mittelwerten $\mu_x$ unf $\mu_y$:
+
+$$ R = \frac{\sum_i (x_i-\mu_x)(y_i-\mu_y)}{\sqrt{\sum_i (x_i-\mu_x)^2\sum_i(y_i-\mu_y)^2}}$$
+
+
+### Code zum Testen
 
 Hier ist der Code nochmal zusammen gestellt. Durch mehrfaches ausführen können wir sehen, wie das Ergebnis variieren kann.
 
@@ -112,3 +129,39 @@ ggplot( nhanes_children ) +
   geom_point( aes( x=age, y=height, col=gender ), size=.3, position=position_jitter(width=.2,height=0) ) +
   geom_abline( intercept = coef(fit)["(Intercept)"], slope=coef(fit)["age"] )
 ```
+
+### Kategorische und kontinuierliche Variable
+
+Zurück zum Beispiel der Samen. Nun wurde die Hqlfte der Samen vorher getrocknet. Dies verringert den Wuchs:
+
+```{r}
+set.seed( 1327 )
+
+tibble( seed_weight = rnorm( n=50, mean=50, sd=15 ) ) %>%
+mutate( dry = rep( c( "no", "yes" ), each=25 ) ) %>%
+mutate( plant_height = rnorm( n=50, mean=30, sd=5 ) + 
+          0.3*seed_weight + ifelse( dry=="yes", -.5, 0 ) ) -> plant_data
+```
+
+Wir möchten wissen, ob die Trocknung einen Unterschied macht.
+
+Erster Versuch: t-Test
+
+```{r}
+t.test( plant_height ~ dry, plant_data ) 
+```
+
+Signifikant, aber nur gerade eben.
+
+Ein Plot zeigt, warum:
+
+```{r}
+ggplot(plant_data) + geom_point( aes( x=seed_weight, y=plant_height, col=dry ) )
+```
+
+Wenn wir erst `seed_weight` "heraus-regressieren" (to regress out), und die Residuen vergleichen würden, sollten wir ein klareres Ergebnis bekommen:
+
+```{r}
+anova( lm( plant_height ~ dry + seed_weight, plant_data ) )
+```
+
