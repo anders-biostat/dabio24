@@ -94,10 +94,6 @@ ungroup() %>%
 summarize( RSS = sum( residual^2 ) ) 
 ```
 
-```{r echo=FALSE}
-perm_rss <- pull(.Last.value)
-```
-
 Nun "erklären" wir etwa 0,14% der Varianz (wieder berechnet als (TSS-RSS)/TSS).
 
 Damit wir wirklich sagen können, dass der Faktor "Ethnie" einen Einfluss auf die Körpergröße hat, sollte das Bestimmtheitsmaß also signifikant über diesem Wert liegen.
@@ -300,3 +296,5 @@ Dies findet man mit Tukey's "Honest Significant Differences"-Test heraus:
 fit <- lm( height ~ ethnicity + gender, nhanes_adults )
 TukeyHSD( aov(fit) )
 ```
+
+In diesen Test ist eine Anpassung von p-Werten und Konfidenzintervallen an das multiple Testen bereits eingebaut.

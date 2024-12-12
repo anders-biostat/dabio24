@@ -9,7 +9,8 @@ Wir wiegen 50 Samen, pflanzen sie ein, warten 4 Wochen, und messen dann die Höh
 
 Der folgende Code erstellt Beispiel-Daten
 
-```{r}
+```{r message=FALSE}
+library( tidyverse )
 set.seed( 1325 )
 
 tibble( seed_weight = rnorm( n=50, mean=50, sd=10 ) ) %>%

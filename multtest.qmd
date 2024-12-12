@@ -76,7 +76,7 @@ In der Praxis geht man etwas anders vor: Man fragt für jedes einzelne Gen: Was 
 
 Wir können dann eine FDR wählen und alle Gene auf die Liste schreiben, deren BH-adjustierte p-Wert unter der gewünschten FDR liegt.
 
-(Mathematisches Detail:  In der o.g. Beschreibung zur BH-Amnpassung fehlt ein Detail, nämlich folgende Regel: Wir sortieren die Gene nach ihrem nominalen (d.h., nicht adjustierten) p-Wert und überprüfen, ob die adjustierten p-Werte auch ansteigen. Wenn ein Gen einen kleineren adjustierten p-Wert hat als ein anderes Gen, das früher in der List kommt, erhält es den adjustierten p-Wert des anderen gens, so dass die Liste der adjustierten p-Werte danach von Gen zu Gen stets ansteigt oder gleich bleibt, aber nie abnimmt.)
+(Mathematisches Detail:  In der o.g. Beschreibung zur BH-Amnpassung fehlt ein Detail, nämlich folgende Regel: Wir sortieren die Gene nach ihrem nominalen (d.h., nicht adjustierten) p-Wert und überprüfen, ob die adjustierten p-Werte auch ansteigen. Wenn ein Gen einen größeren adjustierten p-Wert hat als ein anderes Gen, das später in der List kommt, erhält es den adjustierten p-Wert des anderen Gens, so dass die Liste der adjustierten p-Werte danach von Gen zu Gen stets ansteigt oder gleich bleibt, aber nie abnimmt.)
 
 In R berechnet die Funktion `p.adjust( p, method="BH" )` einen Vektor mit BH-adjustierten p-Werten, wenn man einen Vektor `p` mit nominalen p-Werten übergibt.
 
