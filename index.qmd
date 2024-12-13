@@ -53,6 +53,7 @@ Wintersemester 2024/25
 - Lineare Modelle
   - [ANOVA](anova.html)
   - [Lineare Regression](linreg.html)
+  - [Hausaufgabe](hausaufgabe_bmi.qmd), fällig zum 17.12.
 
 ## Musterlösungen zu den Hausaufgaben
 - zur Hausaufgabe [vom 7.11.](Loesung_Hausaufgabe_2024-11-07.html)

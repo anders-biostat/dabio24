@@ -2,7 +2,6 @@
 title: "homework 2611"
 author: "Anna Yermokhina"
 format: html
-embed-resources: true
 ---
 
 ## Homework 26.11
