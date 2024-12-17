@@ -3,7 +3,7 @@
 Um Ihnen ein Gefühl dafür zu geben, was Sie hier in diesem Semester lernen werden, 
 zeige ich Ihnen im Folgenden ein Beispiel einer typischen Datenanalyse.
 
-Am Ende des Semesters werden Sie solche Analysen selbst duchführen können.
+Am Ende des Semesters werden Sie solche Analysen selbst duchführen können. 
 
 ### Problemstellung
 

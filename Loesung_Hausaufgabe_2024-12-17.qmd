@@ -1,0 +1,76 @@
+---
+title: "Hausaufgabe vom 17.12.2024"
+format: html
+embed-resources: true
+editor: visual
+---
+
+### **Aufgabe 1**
+
+Berechnen Sie für die Probanden den BMI. Unterscheidet sich der Mittelwert des BMI zwischen den Männern und den Frauen? Ist der Unterschied statistisch signifikant?
+
+```{r}
+#read.csv("nhanes") Die Daten aufrufen
+library(tidyverse)
+nhanes %>%
+  filter(age >= 20, age <= 29) %>%
+  filter(!is.na (weight), !is.na(height)) %>%
+  mutate(bmi = weight/(height/100)^2) -> tbl
+
+t.test(bmi ~ gender, tbl)
+
+#Die Mittelwerte der jeweiligen Geschlechter werden automatisch von der 't.test()'-Funktion ausgegeben
+```
+
+### **Aufgabe 2**
+
+Unterscheidet sich der BMI zwischen den Ethnien? Führen Sie eine Two-way-ANOVA durch für BMI gegen die Faktoren Geschlecht und Ethnie.
+
+```{r}
+anova(lm(bmi~ethnicity, tbl))
+```
+
+### **Aufgabe 3**
+
+Ermitteln Sie die Anzahl übergewichtiger Frauen und übergewichtiger Männer unter den Probanden. Ein Proband zählt als übergewichtig, wenn der BMI 25 überschreitet. Bestimmen Sie den (prozentualen) Anteil der Übergewichtigen an allen Frauen bzw. Männern. Führen Sie einen statistischen test durch, um zu sehen, ob der Anteil signifikant ist.
+
+```{r}
+tbl %>%
+  mutate( overweight = bmi > 25) %>%
+  group_by( gender ) %>%
+  summarise( n_overweight = sum(overweight), n = n()) %>%
+  mutate( percent_overweight = n_overweight / (n*100))
+
+#Fisher-Test durchführen, dafür erstellen wir ein Vier-Felder-Tafel
+
+tbl %>%
+  mutate( overweight = bmi > 25) %>%
+  group_by( gender ) %>%
+  summarise( n_overweight = sum(overweight), not_overweight = n() - sum(!overweight))%>%
+  column_to_rownames("gender") %>% #Die Spalte "Gender" als Zeilennamen umgewandelt
+  fisher.test()
+
+#Aus vorherigen Code haben wir die benötigten Werte ausgerechnet, nun erstellen wir einen Vier-Felder-Tafel
+
+rbind(c(245,153), c(223,148)) %>% fisher.test
+```
+
+### **Aufgabe 4**
+
+In Aufgabe 1 haben wir den Mittelwert des BMI zwischen den Geschlechtern verglichen, in Aufgabe 3 hingegen den Anteil der Probanden, deren BMI einen vorgegeben Wert überschreitet. Vergleichen Sie die beiden Vorgehensweisen hinsichtlich ihrer Eignung, die Frage zu beantworten, welches Geschlecht mehr von der Adipositas-Epidemie betroffen ist. (Schreiben Sie dazu ein paar Sätze.)
+
+```{r}
+
+```
+
+### **Aufgabe 5**
+
+Visualisieren Sie die Daten, die Sie in Aufgabe 2 untersucht haben, in geeigneter Weise.
+
+```{r}
+tbl %>%
+  ggplot() + geom_histogram( aes (x = bmi, y = after_stat(density)), bins = 14) +
+  facet_grid(rows = vars (gender), cols = vars(ethnicity)) +
+  geom_vline(xintercept = 25)
+
+```

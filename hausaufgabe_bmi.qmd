@@ -2,7 +2,7 @@
 title: "Hausaufgabe"
 ---
 
-### Daten
+### 
 
 Für diese Aufgabe benuzten wir die NHANES-Daten, und zwar *nur* die Probanden im Altersbereich 20 bis 29 Jahre. 
 
