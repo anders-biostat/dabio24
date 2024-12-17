@@ -10,9 +10,8 @@ editor: visual
 Berechnen Sie für die Probanden den BMI. Unterscheidet sich der Mittelwert des BMI zwischen den Männern und den Frauen? Ist der Unterschied statistisch signifikant?
 
 ```{r}
-#read.csv("nhanes") Die Daten aufrufen
 library(tidyverse)
-nhanes %>%
+read_csv("data_on_git/nhanes.csv") %>% #Die Daten aufrufen
   filter(age >= 20, age <= 29) %>%
   filter(!is.na (weight), !is.na(height)) %>%
   mutate(bmi = weight/(height/100)^2) -> tbl
