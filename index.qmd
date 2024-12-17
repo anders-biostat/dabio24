@@ -56,6 +56,7 @@ Wintersemester 2024/25
   - [Hausaufgabe](hausaufgabe_bmi.qmd), fällig zum 17.12.
 
 ## Musterlösungen zu den Hausaufgaben
+(beigetragen von den Tutorinnen)
 - zur Hausaufgabe [vom 7.11.](Loesung_Hausaufgabe_2024-11-07.html)
 - zur Hausaufgabe [vom 24.11.](Loesung_Hausaufgabe_2024-11-14.html)
 - zur Hausaufgabe [vom 5.12.](Loesung_Hausaufgabe_2024-11-26.html)
