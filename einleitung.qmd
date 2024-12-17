@@ -1,4 +1,4 @@
-# Einführendes Beispiel zur Datenanalyse test test
+# Einführendes Beispiel zur Datenanalyse
 
 Um Ihnen ein Gefühl dafür zu geben, was Sie hier in diesem Semester lernen werden, 
 zeige ich Ihnen im Folgenden ein Beispiel einer typischen Datenanalyse.
