@@ -1,0 +1,175 @@
+---
+title: "Poisson-Verteilung"
+---
+
+### Von der Binomial- zur Poissonverteilung
+
+Wir führen $n=1000$ Bernoulli-Experimente durch, mit einer Erfolgswahrscheinlichkeit von $p=0.01$.
+Der Erwartungswert für die Anzahld er Erfolge ist $\mu=np=0.01\cdot 1000=10$.
+
+```{r}
+plot( 0:30, dbinom( 0:30, 1000, 0.01 ) )
+```
+
+Wir führen $n=10\,000$ Bernoulli-Experimente durch, mit einer Erfolgswahrscheinlichkeit von $p=0.001$.
+Der Erwartungswert für die Anzahl der Erfolge ist wieder $\mu=np=0.001\cdot 10000=10$.
+
+```{r}
+plot( 0:30, dbinom( 0:30, 10000, 0.001 ) )
+```
+Die beiden Verteilungen sind praktisch gleich.
+
+Wenn man sehr viele Bernoulli-Versuche durchführt (großes $n$), und die Erolgswahrscheinlichkeit klein ist (kleines $p$), dann hängt die Form der Binomialverteilung nur vom Produkt $\mu=np$ ab. Man nähert die Binomialverteilung mit Versuchs-Anzahl $n$ und Erfolgs-Wahrscheinlichkeit $p$ sie dann durch die Poisson-Verteilung mit Erwartungswert $\mu=np$ an.
+
+Wahrscheinlichkeitsverteilung für $k$ Erfolge nach Binomialverteilung $\text{Bi}(n,p)$:
+
+$$ f_\text{Binom}(k;n,p) = \binom{n}{k} p^k (1-p)^{n-k} $$
+Wahrscheinlichkeitsverteilung für $k$ Ereignisse nach Poissonverteilung $\text{Pois}(\mu)$:
+
+$$f_\text{Pois}(k;n,p) = e^{-\mu}\frac{\mu^k}{k!} $$
+
+Es gilt der Grenzwert (Limes):
+
+$$ f_\text{Binom}(k;n,p) \rightarrow f_\text{Pois}(k;\mu) \quad\text{ für } n\rightarrow\infty,\,\,\, \mu=np $$
+Hier die Poissonverteilung für $\mu=10$:
+
+
+```{r}
+plot( 0:30, dpois( 0:30, 10 ) )
+```
+
+### Beispiele für Poissonverteilung
+
+Die Poissonverteilung gilt exakt, wenn der Prozess kontinuierlich ist.
+
+Beispiel 1: Bei einem leichten aber andauernden Nieselregen fallen 7 Tropfen pro Quadratmeter und Sekunde. Wir beobachten einen 10 x 10 cm großen Pflasterstein für 30 Sekunden. Wie wahrscheinlich ist es, dass in dieser Zeit genau $k$ Tropfen auf den Stein fallen?
+
+Wir erwarten in den 30 Sekunden $30\cdot 7$ Tropfen pro Quadratmeter, also $\mu=30\cdot 7\cdot 0.01=2.1$ Tropfen für den 0.01 m² großen Pflasterstein. Die Verteilung ist also eine Poissonverteilung mit $\mu=2.1$. Wenn wir viele Pflastersteine haben und zählen, welcher Anteil der Steine genau 0, genau 1, genau 2,  ..., Tropfen hat, erhalten wir diese Anteile:
+
+```{r}
+plot( 0:10, dpois( 0:10, 2.1 ) )
+```
+
+Beispiel 2: Wir beobachten eine radioaktive Probe mit einem Geigerzähler. Im Mittel klickt der Geigerzähler 50 mal pro Minute. Wie wahrscheinlich ist es, dass man in einer bestimmten Minute höchstens 40 mal klickt?
+
+```{r}
+sum( dpois( 0:40, 50 ) )
+```
+
+Dasselbe, mit `ppois`
+
+```{r}
+ppois( 40, 50 )
+```
+
+Auch wenn der Prozess nicht kontinuierlich ist, aber $n$ sehr groß ist (im Vergleich zu $\mu$), kann die Poissonverteilung angewendet werden.
+
+Beispiel: Mit Hilfe eine Zählkammer mit Zählgitter soll die Anzahl Erythrozyten in einer (verdünnten) Blutprobe bestimmt werden. Die Zählkammer fasst 1 µl und enthält 1232 Erythrozyten. Sie ist in 100 Quadrate aufgeteilt, also 0.01 µl pro Quadrat. Wie ist die Verteilung der Zellzahlen pro Quadrat?
+
+```{r}
+plot( 0:30, dpois( 0:30, 12.32 ) )
+```
+Ein einzelnes Quadrat zu zählen ist also wohl nicht genau genug.
+
+Wenn wir 10 Quadrate zählen, erwarten wir 123.2 Zellen pro Zehnerfeld.
+
+```{r}
+plot( 0:300, dpois( 0:300, 123.2 ) )
+```
+
+Nun ist die Zahl deutlich genauer (nämllich um den Faktor $\sqrt{10}=3.23$).
+
+### Varianz der Poissonverteilung
+
+Eine Poissonverteilung mit Erwartungswert $\mu$ hat Varianz $\mu$ und STandardabweichung $sqrt{\mu}$.
+
+Der relative Standardfehler, mit dem man den Erwartungswert bestimmen kann, ist also $\sqrt{\mu}/\mu=1/\sqrt{mu}$.
+
+Beispiel: Wir bestimmen die Erythrozytenzahl pro Mikroliter, indem wir ein Quadrat zu 0.01 µl auszählen. Hier sind 30 mögliche Werte, die wir erhalten könnten:
+
+```{r echo=FALSE}
+set.seed(1234)
+```
+
+```{r}
+rpois( 30, 12.32 ) * 100
+```
+
+Die Standardabweichung dieser Werte sollte $\sqrt{12.32} \cdot 100= 351$ betragen. Der relative Standardfehler ist also $351/1232=28.5\%$.
+
+Nun zählen wir 10 Quadrate aus. Wenn wir das 30mal machen, erhalten wir:
+
+```{r}
+rpois( 30, 123.2 ) * 10
+```
+
+Diesmal erwarten wir als Standardabweichung $\sqrt{123.2} \cdot 10= 111$ betragen. Der relative Standardfehler ist also $111/1232=9.0\%$.
+
+Oder wir zählen die gesamte Zelle aus:
+
+```{r}
+rpois( 30, 1232 ) * 1
+```
+
+Nun ist die Standardabweichung $\sqrt{1232} \cdot 1= 35$ betragen. Der relative Standardfehler ist also $111/1232=2.9\%$.
+
+### Standardfehler in der Praxis
+
+Natürlich wissen wir den wahren Wert 1232 nicht.
+
+Im ersten Fall (einzelnes Quadrat) zählen wir z.B. 8 Zellen und errechnen 800 Zellen/µl. Wir schätzen den Standardfehler zu $\sqrt{8}=2.83$, also $\pm 283$ um den vermuteten Wert 800. Dies ergibt uns ein 68%-KI. Mit $100\cdot8\pm2\cdot100\cdot\sqrt{8}$ erhalten wir das 95%-KI von 234 bis 1366 Zellen/µl (Breite des KI: 1132).
+
+Im zweiten Fall (10 Quadrate) zählen wir z.B. 137 Zellen. Als 95%-KI ermitteln wir $10\cdot137\pm2\cdot 10\cdot\sqrt{137}$, also 1136 bis 1604 Zellen/µl  (Breite des KI: 468).
+
+Im dritten Fall (ganze Zelle mit 100 Quadraten) zählen wir z.B. 1236 Zellen. Als 95%-KI ermitteln wir $1236\pm2\cdot \sqrt{1236}$, also 1166 bis 1306 Zellen/µl  (Breite des KI: 140 )
+
+### Merkregel
+
+Wenn wir $k$ Ereignisse zählen, ist die relative Genauigkeit, mit der wir die Eregnis-Rate bestimmen, also $1/\sqrt{k}$
+
+Es empfielt sich, diese Unsicherheit für ein paar Werte von $k$ zu kennen:
+
+```
+        k     rel. Unsicherheit
+---------    -----------------
+       10    0.3      (32%)
+      100    0.1      (10%)
+    1 000    0.03     ( 3%)
+   10 000    0.01     ( 1%)
+  100 000    0.003    ( 0.3%)
+1 000 000    0.001    ( 0.1%)
+```
+
+Eigentlich muss man sich nur merken, dass $\sqrt{10}\approx 3.2$.
+
+### Vergleiche
+
+In zwei benachbarten Dörfern regnet es sehr kurz. Nach dem Regen zählt ein Passant auf einem Pflasterstein im ersten Dorf 30 Regentropfen. Im zweiten Dorf zählt ein anderer Passant auf einem Pflasterstein derselben Größe 40 Tropfen. Hat es im zweiten Dorf stärker geregnet? 
+
+95%-Konfidenzintervall für Dorf 1: 
+
+```{r}
+30 + c( -2, 2 ) * sqrt(30)
+```
+
+für Dorf 2:
+
+```{r}
+40 + c( -2, 2 ) * sqrt(40)
+```
+
+Die Konfidenzintervalle überlappen deutlich. Es ist also sehr gut möglich, dass beim Vergleich zwei weiterer Pflastersteine das erste Dorf vorn liegt.
+
+Mittels mRNA-Sequenzierung werden von zwei Proben jeweils 10 Millionen mRNA-Moleküle sequenziert. Von diesen fallen auf das Gen X für Probe A 100 Reads und für Probe B 150 Reads. Können wir sagen, dass Gen X in Probe B stärker exprimiert war?
+
+```{r}
+100 + c( -2, 2 ) * sqrt(100)
+150 + c( -2, 2 ) * sqrt(150)
+```
+
+Das ist so gerade eben signifikant.
+
+Können wir sagen, dass das Gen in Probe B um 50% stärker exprimiert war?
+
+Nein, auch ein sehr schwächerer Unterschied wäre gemäß der KIs plausibel.
+
