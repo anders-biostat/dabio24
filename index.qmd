@@ -53,9 +53,13 @@ Wintersemester 2024/25
 - Lineare Modelle
   - [ANOVA](anova.html)
   - [Lineare Regression](linreg.html)
-  - [Hausaufgabe](hausaufgabe_bmi.qmd), fällig zum 17.12.
+  - [Hausaufgabe](hausaufgabe_bmi.html), fällig zum 17.12.
+- [Poisson-Verteilung](poisson.html)  
 
 ## Musterlösungen zu den Hausaufgaben
+
+(erstellt von den Tutorinnen)
+
 - zur Hausaufgabe [vom 7.11.](Loesung_Hausaufgabe_2024-11-07.html)
 - zur Hausaufgabe [vom 24.11.](Loesung_Hausaufgabe_2024-11-14.html)
 - zur Hausaufgabe [vom 5.12.](Loesung_Hausaufgabe_2024-11-26.html)
