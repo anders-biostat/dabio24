@@ -298,3 +298,101 @@ TukeyHSD( aov(fit) )
 ```
 
 In diesen Test ist eine Anpassung von p-Werten und Konfidenzintervallen an das multiple Testen bereits eingebaut.
+
+## Verzerrung durch fehlende Variable 
+
+(engl. "bias from omitted variable")
+
+*Beispiel:* Wir untersuchen eine gewisse Pflanzensorte in ihrem natürlichen Umfeld. Wir vermuten, dass die Bodenqualität, insbesondere der Salzgehalt, einen Einfluss auf das Wachstum hat. Wir suchen Pflanzen an vielen verschiedenen Orten, bestimmen den Salzgehalt des Bodens (der Einfachheit halber dichotomisiert: "niedrig" und "hoch") und messen die Wuchshöhe der Pflanze. Außerdem bestimmen wir ob die Pflanze im direkten Sonnenlicht steht oder von anderen Pflanzen beschattet wird. Leider haben wir übersehen, dass unsere Pflanzen zu zwei Spezies derselben Familie gehören, die äußerlich schwer zu unterscheiden sind.
+
+```{r}
+set.seed( 1321 )
+
+tibble( species = sample( c("A", "B"), size = 350, replace = TRUE, prob = c(0.3, 0.7) ) ) %>%
+mutate( salt = ifelse( species == "A",
+    sample( c( "high","low"), size = n(), replace = TRUE, prob = c(0.5,0.5) ),
+    sample( c( "high","low"), size = n(), replace = TRUE, prob = c(0.2,0.8) ) ) ) %>%
+mutate( light = sample( c( "shade", "sun" ), size = n(), replace = TRUE, prob = c(0.5,0.5) ) ) %>%
+mutate( height = ifelse( species=="A", 40, 70 ) + ifelse( light=="sun", 30, 0 ) + rnorm( n(), 0, 10 ) ) -> tbl
+
+head(tbl)
+```
+
+In unserer ersten ANOVA betrachten wir nur die Prediktoren `salt` und `light`:
+
+```{r}
+fit <- lm( height ~ salt + light, tbl )
+fit
+```
+
+Offensichtlich wächst die Pflanze höher, wenn die viel Licht und wenig Salz hat. 
+
+Beide Effekte scheinen signifikant zu sein:
+
+```{r}
+anova(fit)
+```
+
+Wenn wir aber die Spezies in die Liste der Prediktoren aufnehmen, hat der Salzgehalt keinen Effekt mehr:
+
+```{r}
+fit <- lm( height ~ species + salt + light, tbl )
+fit
+anova(fit)
+```
+
+Wie kann das sein?
+
+Folgender Beeswarm-Plot erklärt den Effekt
+
+
+```{r}
+ggplot( tbl, aes( x = str_c(light,"/",salt) ) ) +
+  geom_beeswarm(aes( y=height, col=species ), size=.7, cex=1.5 ) +
+  geom_errorbar( aes( ymin=conf.low,ymax=conf.high ), col="darkgray", width=.4,
+    data = ( tbl %>% group_by( salt, light ) %>% summarise( broom::tidy(t.test(height)) ) ) )
+```
+
+Zunächst scheint der Mittelwert der Größe bei Böden mit wenig Salz höher zu sein als bei salzigem Boden. Dann fällt uns aber auf, dass Spezies B wohl Probleme mit salzigem Böden hat, denn obwohl wir insgesamt Spezies B öfter gesammelt haben als Spezies A, zieht Spezies A bei den schlechten Böden gleich.
+
+Wie zeichnen den Beeswarm
+
+```{r}
+ggplot( tbl, aes( x = str_c(light,"/",salt) ) ) +
+  geom_beeswarm(aes( y=height, col=species ), size=.7, cex=1.5 ) +
+  geom_errorbar( aes( ymin=conf.low,ymax=conf.high ), col="darkgray", width=.4,
+    data = ( tbl %>% group_by( salt, light, species ) %>% summarise( broom::tidy(t.test(height)) ) ) ) +
+  facet_grid( ~ species )
+```
+
+Also: Spezies A wächst allgemein weniger hoch als Spezies B. Da sie aber salzige Böden meidet, denkt man, dass das Salz die Wuchshöhe verringert, wenn man die beiden Spezies gemeinsam betrachtet. Wenn man aber die beiden Spezies getrennt betrachtet, verschwindet der Effekt.
+
+#### Konfundierende und vermittelnde Faktoren
+
+Das eben beobachtete Phänomen kann auf zwei Weisen entstehen:
+
+##### Vermittlung
+
+(mediation)
+
+Ursache $\rightarrow$ Mediator $\rightarrow$ Response
+
+Der Faktor "Ursache" beeinflusst die Response nicht direkt, sondern beeinflusst einen "vermittelnden" Faktor, der dann die Response beeinflusst.
+
+Beispiel: Menschen, die wenig Sport machen, haben häufiger Diabetes Typ 2 als sportliche Menschen. Direkte Ursache des Diabetes ist aber Übergewicht, was aus der mangelnden körperlichen Betätigung resultiert.
+
+zu wenig Bewegung $\rightarrow$ Übergewicht $\rightarrow$ Diabetes II
+
+##### Konfundierung
+
+(confounding)
+
+Ein Faktor ("Confounder") hat sowohl Einfluss auf den vermeintlichen Prediktor wie auch auf die Response.
+
+Beispiel: Menschen, die viel rauchen, trinken oft auch viel Kaffee. Wenn wir das Auftreten von Atemwegskrankheiten auf Kaffeekonsum regressieren, könnten wir falsch folgern, dass Kaffee zu Atemwegserkrankungen führt.
+
+Neigung zu Genussmittelsucht 
+  - $\rightarrow$ Kaffeekonsum
+  - $\rightarrow$ Rauchen $\rightarrow$ Atemwegserkrankungen
+  
+"Correlation does not imply Causation"  
