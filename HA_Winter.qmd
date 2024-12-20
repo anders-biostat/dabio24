@@ -1,0 +1,99 @@
+---
+title: "Hausaufgabe über die Winterferien"
+---
+
+Diese Hausaufgabe ermöglicht Ihnen, über die Weihnachtsferien etwas R und Data Science zu üben. Wenn Sie bis zum **19. Januar 2025** eine ausgearbeitete Hausarbeit abgeben, zumindest für die **Aufgaben 1 bis 4**, dann erhalten Sie Bonuspunkte, die Ihnen bei der Bewertung der Klausur am Ende des Semesters angerechnen werden.
+
+Bitte bearbeiten Sie die Aufgaben mit R. Am besten erstellen Sie ein Quarto-Dokument, so dass Sie ihre ferige Arbeit als HTML-Datei auf Moodle hochladen können. Ihre Arbeit sollte neben dem vollständigen R-Code in den Ergebnissen auch etwas Text enthalten, in dem Sie erläutern, was die Ergebnisse darstellen, wie Ihr R-Code funktioniert und wie Sie die Ergebnisse interpretieren.
+
+**Wichtig**: Bitte beachten Sie unbedingt die [Hinweise hier](standalone.html), wie man ein vollständiges Notebook erstellt und hochlädt. 
+
+Wenn Sie Fragen zu den Aufgaben haben, können Sie diese im Moodle-Forum stellen.
+
+### Der "DHQ-9 Depression Screener"
+
+In dieser Aufgabe arbeiten wir, wie in der Vorlesung, mit den Daten aus dem Durchgang "J" (2017/18) der NHANES-Studie. Spezifisch betrachten wir Daten zur psychischen Gesundheit.
+
+Bei Studien zur psychischen Gesundheit wird gerne ein als "DHQ9" bezeichneter Fragebogen verwendet, den K. Kroenke und R. L. Spitzer entworfen haben. Die deutsche Version dieses Fragebogens finden Sie auf Wikipedia, [hier](https://de.wikipedia.org/wiki/PHQ-9#/media/Datei:Gesundheitsfragebogen_PHQ-9.tif); in NHANES wurde natürlich eine englischsprachige Version verwendet. 
+
+Innerhalb von NHANES 2017/18 wurden den Probanden auch die DHQ9-Fragen gestellt. Die Antworten der erwachsenen Probanden sind auf der NHANES-Webseite als Tabelle `DPQ_J` verfügbar.
+
+Zur Auswertung empfehlen Kroenke und Spizter, jede Antwort mit einer Punktzahl von 0 bis 3 zu bewerten (wie auf dem Fragebogen angegeben), und die 9 Antwort-Punktzahlen zu einer Punktsumme aufzuaddieren. Durch Vergleich mit von erfahren Psychiatern gestellten Diagnosen wurde festgestellt, dass ein Wert ab 5 typischerweise eine milde Depression anzeigt, ein Wert ab 10  eine moderate und ab 15 eine schwere Depression. 
+
+### Anmerkung
+
+***Anmerkung**: Wenn Sie sih den Fragebogen ansehen, veranlasst Sie das vielleicht, die neun Fragen für sich selbst zu beantworten. Möglichweise erreichen Sie dabei eine Punktzahl erreicht, die auf eine Depression hindeutet. In diesem Fall möchten Sie vielleicht den Hinweis lesen, den ich am Ende angefügt haben.*
+
+
+### Aufgabe 1: DHQ9-Punktsummen der NHANES-Probanden
+
+Laden Sie die Tabelle mit den DHQ9-Antworten von der [NHANES-Webseite](https://wwwn.cdc.gov/nchs/nhanes/Default.aspx) herunter und laden Sie sie in R. Sie finden die DPQ_J-Tabelle für die Jahre 2017/18 im Bereich "Questionnaire Data". 
+
+Berechnen Sie für alle Probanden, die die Fragen vollständig beantwortet haben, die Punktsumme, und speichern Sie diese in einer Tabelle.
+
+Hinweise:
+
+- Wie zumeist ist das Zurechtlegen der Daten (Data Wrangling) am schwierigsten, und das ist hier Aufgabe 1. Daher gibt es zu dieser Aufgabe eine Ersatzlösung (siehe unten), so dass Sie auch mit der (vielleicht einfacheren) Aufgabe 2 anfangen können.
+- Denken Sie daran, dass die NHANES-Daten im XPT-Format vorliegen (da die NHANES-Statistiker mit SAS statt R arbeiten). Um XPT-Dateien in R einzulesen, können Sie die Funkion `read_xpt` aus dem Paket `haven` verwenden.
+- Die Tabelle liegt in "breiter" Form vor, d.h. jede Zeile enthält alle Antorten eines Probanden. Das Aufsummieren der Punkte ist aber einfacher, wenn Sie die Tabelle, z.B. mit `pivot_longer`, in eine lange Form umwandeln, in der jede Zeile nur die Antwort zu einer Frage enthält. Dann können Sie nämlich mit `group_by` alle Zeilen, die zum selben Probanden gehören, zu eienr Gruppe zusammenfassen, und dann `sum` mit `summarise` anwenden.
+- Alternativ können Sie natürlich auf einfach die 9 Spalten aufaddieren, indem Sie sie alle aufzählen und Pluszeichen dazwischen setzen.
+- Es gibt noch eine zehnte Frage auf dem Fragebogen, zur Auswirkung der abgefragten Probleme. Diese darf bei der Ermittlung der Punktsumme *nicht* mit gezählt werden. 
+- Gültige Antworten haben Codes von 0 bis 3; es kommen aber auch die Codes 7 ("verweigert") und 9 ("weiß nicht") vor. Ersetzen Sie alle Codes über 3 durch `NA`, indem z.B. eine Konstruktion verwenden wie
+  `antwort = ifelse( antwort > 3, NA, antwort)`,
+  die in der Spalte `antwort` für jeden Wert prüft, ob er `> 3` ist und wenn ja, ihn durch `NA` ersetzt und sonst die `antwort` lässt wie sie ist.
+
+*Ersatzlösung:* Hier finden Sie eine Tabelle mit zwei Spalten: der Probanden-ID, und der DHQ9-Punktsumme: [dpq9_j_score_sums.csv](https://papagei.bioquant.uni-heidelberg.de/simon/Vl2223/dpq9_j_score_sums.csv) <small>[Diese Datei wurde am 26.12. ersetzt.]</small>
+
+### Aufgabe 2: Zusammenfügen der Tabellen
+
+Fügen Sie die Tabelle aus Aufgabe 1 mit der Tabelle mit den demographsichen Daten (DEMO_J), die Sie bereits aus der Vorlesung kennen, zusammen. Erstellen Sie so eine Tabelle, die für jeden erwachsenen Probanden folgende Spalten enthält: laufende Nummer des/der Probanden, Geschlecht, Alter, DHQ9-Punktsumme, Familenstand. 
+
+Den Familienstand finden Sie in der Spalte DNDMARTL der Tabelle mit den demographischen Daten. Schlagen Sie die Bedeutung der Codes im Codebuch nach, und wandeln Sie den numerischen Code in aussagekräftige Begriffe um.
+
+### Aufgabe 3: Verteilung der Depressions-Scores
+
+Berechnen Sie die Mittelwerte der DHQ9-Punktsummen (Depressions-Scores) für Männer und Frauen. Gibt es zwischen Männern und Frauen einen statistisch signifikanten Unterschied? Führen Sie dazu einen t-Test durch.
+
+Stellen Sie die Verteilung der Punktzahl durch zwei Histogramme dar, eines für die Männer und eines für die Frauen. Markieren Sie in beiden Histogrammen Mittelwert und zugehöriges 95%-Konfidenzintervall mit farbigen vertikalen Linien.
+
+### Aufgabe 4: Häufigkeit von Depressionen und Abhängigkeit vom Familienstand
+
+Ein Mittelwert ist vielleicht nicht die beste Wahl, um die DHQ9-Punktsummen zusammen zu fassen. Es könnte besser sein, zu fragen, wie oft eine mindestens mittelschwere Depression (Punktsumme min. 10) vorliegt. Berchnen Sie also, welcher Anteil der Probanden eine mindestens mittelschwere Depression hat. 
+
+Ermitteln Sie den Anteil aufgeschlüsselt nach Geschlecht und Familienstand. Stellen Sie Ihr Ergebnis durch ein Säulendiagramm dar. Fügen Sie auch binomische Konfidenzintervalle hinzu.
+
+---
+
+## Weitere Übungsaufgaben
+
+*Hier sind noch einige weitere Übungen, die Sie versuchen können, wenn Sie Ihre Data-Science-Fähigkeiten noch weiter trainieren möchten. Es genügt aber, wenn Sie nur die Aufgaben 1 bis 4 bearbeiten.*
+
+### Aufgabe 5: Abhängigkeit vom Familienstand
+
+Berechnen Sie die Mittelwerte der Depressions-Scores, aufgeschlüsselt nach Geschlecht und Familienstand. Stellen Sie das Ergebnis graphisch dar; zeichnen Sie auch 95%-Konfidenzintervalle ein. Vergleichen Sie mit dem Ergebis von Aufgabe 4.
+
+### Aufgabe 6: Abhängigkeit vom Alter
+
+Nehmen Depressionen im Alter zu oder ab? Berechnen Sie für jedes Lebensjahr den Anteil Depressiver unter den Frauen und Männern mit diesem Alter und stellen Sie die z.B. als Liniendiagramm dar.
+
+Wenn die Linie zu "zackig" ist, könnte es halfen, Personen im selben Lebensjahrzehnt zu einer Gruppe zusammen zu fassen. 
+
+### Aufgabe 7: Anova
+
+Stellen Sie mit Anova fest, welche der Faktoren Geschlecht, Ethnie und Alter einen Einfluss auf (oder zumindest Zusammenhang mit) dem Depressions-Score hat.
+
+### Aufgabe 8: Weitere Kovariate
+
+Finden Sie unter den vielen in NHANES erhobenen Daten noch weitere Variablen, die Ursache (oder auch Wirkung) einer Depression repräsentieren könnten? Erstellen Sie dazu noch einige Plots.
+
+---
+
+## Falls Sie selbst einen erhöhten Depressions-Score haben
+
+Vielleicht haben Sie die Fragen des DHQ-9-Fragebogen für sich selbst beantwortet und eine Punktsumme erhalten, die auf eine Depression hinweist. In disem Fall möchte ich versuchen, Ihnen einige Worte als Rat anzubieten.
+
+Depression ist keine selten, aber dennoch eine ernste Erkrankung, die viel Leid mit sich bringt. Betroffene suchen aber oft keine Hilfe, vielleicht, weil die Depressionen ihnen die Kraft dafür nimmt, oft aber auch, weil sie sich nicht zugestehen, ihr eigenes Leid ernst zu nehmen. 
+
+Ein Fragebogen wie der hier besprochene kann natürlich keine fachliche Diagnose ersetzen, aber er kann Ihnen verdeutlichen, dass es Ihnen *wirklich* schlecht geht -- und somit, dass Ihre Probleme nicht "Ihre Schuld" sind und dass Sie sie nicht alleine lösen müssen, sondern Hilfe in Anspruch nehmen dürfen und sollten. 
+
+Wenn dem so ist, gehen Sie den ersten Schritt: Sprechen Sie mit Ihrem Hausarzt, oder wenden Sie sich an die [Psychosoziale Beratung des Studierendenwerkes](https://www.uni-heidelberg.de/de/studium/service-beratung/psychosoziale-beratung-fuer-studierende-pbs), um zu erfahren, welche Hilfe Ihnen zur Verfügung steht.

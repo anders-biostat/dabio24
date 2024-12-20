@@ -347,6 +347,8 @@ Folgender Beeswarm-Plot erklärt den Effekt
 
 
 ```{r}
+library( ggbeeswarm )
+
 ggplot( tbl, aes( x = str_c(light,"/",salt) ) ) +
   geom_beeswarm(aes( y=height, col=species ), size=.7, cex=1.5 ) +
   geom_errorbar( aes( ymin=conf.low,ymax=conf.high ), col="darkgray", width=.4,

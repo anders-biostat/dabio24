@@ -1,0 +1,53 @@
+---
+title: "Anmerkung zu Quarto-Nootebooks"
+---
+
+### Erstellen einer vollständigen Datei
+
+Wenn Sie in RStudio ein Quarto-Notebook, z.B. mit Dateinamen `notebook.qmd`, erstellen, können Sie mit der "Render"-Funktion daraus eine HTML-Datei `notebook.html` erstellen, die Sie in einem Web-Browser ansehen können. 
+
+Die HTML-Datei enthält dann aber *nicht* die Abbildungen. Für diese wird ein Unterverzeichnis `notebook_files` angelegt, in dem Quarto-Render die Bilder als einzelne Dateien ablegt. Wenn Sie die HTML-Datei auf Ihrem Computer öffnen, findet Ihr Webbrowser die Abbildungen dann dort.
+
+**Das Problem**: Wenn Sie die HTML-Datei an jemand anderen weiter geben, oder z.B. auf Moodle hochladen, fehlen die Bilder dann (sofern Sie das Unterverzeichnis nicht mit dazu packen).
+
+**Die Lösung**: Sie können Quarto anweisen, die Daten für die Abbildungen direkt in die HTML-Datei mit einzuschließen. Die Datei wird dann deutlich größer, enthält aber dann alle Teile.
+
+Dazu müssen Sie den sog. YAML-Block modifizieren. Das sind die Zeilen ganz am Anfang der qmd-Datei, die mit "`---`" eingerahmt sind. Ändern Sie den Block auf die folgende Form:
+
+```
+---
+title: "Meine Überschrift"
+author: "Martina Musterfrau"
+format: 
+  html:
+    embed-resources: true
+---
+```
+
+Wichtig: Die Zeilen müssen mit Leerzeichen am Anfang so eingerückt werden wie gezeigt.
+
+Wenn man dann auf "Render" klickt, entsteht eine HTML-Datei, die alles enthält. Ein Unterverzeichnis mit den Bildern wird dann nicht mehr angelegt.
+
+### Hochladen auf Moodle
+
+Wenn Sie eine Hausarbeit auf Moodle hochladen, beachten Sie bitte unbedingt folgendes:
+
+- Laden Sie die html-Datei hoch, nicht die qmd-Datei.
+
+- Vergessen Sie nicht das `embed-resources: true`
+
+### Tipps für Probleme beim Rendern
+
+Sie werden oft feststellen, dass Ihr Code, wenn Sie auf "Render" klicken, eine Fehlermeldung ausgibt, obwohl er vorher funktioniert hat. 
+
+Meistens ist der Grund wie folgt: Für das Rendern (d.h. das Erstellen der HTML-Datei) führt RStudio alle Code-Blöcke nochmals aus, und zwar in der Reihenfolge, in der sie im Notebook stehen. Dazu startet es eine neue, frische, leere R-Sitzung, in der anfangs keine Pakete und keine Daten geladen sind. Die Pakete und Daten, mit denen Sie arbeiten, sieht diese R-Sitzung also nicht, wenn Sie sie nicht explizit durch Code-Blöcke am Anfang laden. 
+
+Außerdem haben Sie beim Erstellen des Notebooks die Code-Blöcke vielleicht nicht immer in der Reihenfolge ausgeführt, wie Sie in Ihrem Notebook stehen und daher nicht gemerkt, dass etwas in der falschen Reihenfolge steht.
+
+Zur Fehlersuche empfiehlt sich folgendes Vorgehen:
+
+- Löschen Sie zuerst alle Daten aus dem Arbeitsspeicher, indem Sie im Environment-Pane auf den Besen klicken (oder, gleichbedeutend, im Menü "Session" die Funktion "Clear workspace" wählen).
+
+- Starten Sie dann eine neue R-Sitzung, indem Sie im Menü "Session" auf "Restart R" klicken.
+
+- Führen Sie nun die Code-Blöcke ihres Notebooks der Reihe nach einzeln aus, indem sie bei jedem Blcok auf den grünen Pfeil klicken, bis Sie auf den Feher stoßen.
