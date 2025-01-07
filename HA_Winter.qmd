@@ -4,11 +4,11 @@ title: "Hausaufgabe über die Winterferien"
 
 Diese Hausaufgabe ermöglicht Ihnen, über die Weihnachtsferien etwas R und Data Science zu üben. Wenn Sie bis zum **19. Januar 2025** eine ausgearbeitete Hausarbeit abgeben, zumindest für die **Aufgaben 1 bis 4**, dann erhalten Sie Bonuspunkte, die Ihnen bei der Bewertung der Klausur am Ende des Semesters angerechnen werden.
 
-Bitte bearbeiten Sie die Aufgaben mit R. Am besten erstellen Sie ein Quarto-Dokument, so dass Sie ihre ferige Arbeit als HTML-Datei auf Moodle hochladen können. Ihre Arbeit sollte neben dem vollständigen R-Code in den Ergebnissen auch etwas Text enthalten, in dem Sie erläutern, was die Ergebnisse darstellen, wie Ihr R-Code funktioniert und wie Sie die Ergebnisse interpretieren.
+Bitte bearbeiten Sie die Aufgaben mit R. Am besten erstellen Sie ein Quarto-Dokument, so dass Sie ihre ferige Arbeit als HTML-Datei auf [Moodle](https://moodle.uni-heidelberg.de/mod/assign/view.php?id=1227495) hochladen können. Ihre Arbeit sollte neben dem vollständigen R-Code in den Ergebnissen auch etwas Text enthalten, in dem Sie erläutern, was die Ergebnisse darstellen, wie Ihr R-Code funktioniert und wie Sie die Ergebnisse interpretieren.
 
 **Wichtig**: Bitte beachten Sie unbedingt die [Hinweise hier](standalone.html), wie man ein vollständiges Notebook erstellt und hochlädt. 
 
-Wenn Sie Fragen zu den Aufgaben haben, können Sie diese im Moodle-Forum stellen.
+Wenn Sie Fragen zu den Aufgaben haben, können Sie diese im [Moodle-Forum](https://moodle.uni-heidelberg.de/mod/forum/view.php?id=1197425) stellen.
 
 ### Der "DHQ-9 Depression Screener"
 
@@ -22,7 +22,7 @@ Zur Auswertung empfehlen Kroenke und Spizter, jede Antwort mit einer Punktzahl v
 
 ### Anmerkung
 
-***Anmerkung**: Wenn Sie sih den Fragebogen ansehen, veranlasst Sie das vielleicht, die neun Fragen für sich selbst zu beantworten. Möglichweise erreichen Sie dabei eine Punktzahl erreicht, die auf eine Depression hindeutet. In diesem Fall möchten Sie vielleicht den Hinweis lesen, den ich am Ende angefügt haben.*
+*Wenn Sie sich den Fragebogen ansehen, veranlasst Sie das vielleicht, die neun Fragen für sich selbst zu beantworten. Möglichweise erreichen Sie dabei eine Punktzahl, die auf eine Depression hindeutet. In diesem Fall möchten Sie vielleicht den Hinweis lesen, den ich am Ende angefügt haben.*
 
 
 ### Aufgabe 1: DHQ9-Punktsummen der NHANES-Probanden
@@ -33,7 +33,7 @@ Berechnen Sie für alle Probanden, die die Fragen vollständig beantwortet haben
 
 Hinweise:
 
-- Wie zumeist ist das Zurechtlegen der Daten (Data Wrangling) am schwierigsten, und das ist hier Aufgabe 1. Daher gibt es zu dieser Aufgabe eine Ersatzlösung (siehe unten), so dass Sie auch mit der (vielleicht einfacheren) Aufgabe 2 anfangen können.
+- Wie zumeist, ist das Zurechtlegen der Daten (Data Wrangling) am schwierigsten, und das ist hier Aufgabe 1. Daher gibt es zu dieser Aufgabe eine Ersatzlösung (siehe unten), so dass Sie auch mit der (vielleicht einfacheren) Aufgabe 2 anfangen können.
 - Denken Sie daran, dass die NHANES-Daten im XPT-Format vorliegen (da die NHANES-Statistiker mit SAS statt R arbeiten). Um XPT-Dateien in R einzulesen, können Sie die Funkion `read_xpt` aus dem Paket `haven` verwenden.
 - Die Tabelle liegt in "breiter" Form vor, d.h. jede Zeile enthält alle Antorten eines Probanden. Das Aufsummieren der Punkte ist aber einfacher, wenn Sie die Tabelle, z.B. mit `pivot_longer`, in eine lange Form umwandeln, in der jede Zeile nur die Antwort zu einer Frage enthält. Dann können Sie nämlich mit `group_by` alle Zeilen, die zum selben Probanden gehören, zu eienr Gruppe zusammenfassen, und dann `sum` mit `summarise` anwenden.
 - Alternativ können Sie natürlich auf einfach die 9 Spalten aufaddieren, indem Sie sie alle aufzählen und Pluszeichen dazwischen setzen.
@@ -42,7 +42,7 @@ Hinweise:
   `antwort = ifelse( antwort > 3, NA, antwort)`,
   die in der Spalte `antwort` für jeden Wert prüft, ob er `> 3` ist und wenn ja, ihn durch `NA` ersetzt und sonst die `antwort` lässt wie sie ist.
 
-*Ersatzlösung:* Hier finden Sie eine Tabelle mit zwei Spalten: der Probanden-ID, und der DHQ9-Punktsumme: [dpq9_j_score_sums.csv](https://papagei.bioquant.uni-heidelberg.de/simon/Vl2223/dpq9_j_score_sums.csv) <small>[Diese Datei wurde am 26.12. ersetzt.]</small>
+*Ersatzlösung:* Hier finden Sie eine Tabelle mit zwei Spalten: der Probanden-ID, und der DHQ9-Punktsumme: [dpq9_j_score_sums.csv](data_on_git/dpq9_j_score_sums.csv)
 
 ### Aufgabe 2: Zusammenfügen der Tabellen
 
@@ -80,7 +80,7 @@ Wenn die Linie zu "zackig" ist, könnte es halfen, Personen im selben Lebensjahr
 
 ### Aufgabe 7: Anova
 
-Stellen Sie mit Anova fest, welche der Faktoren Geschlecht, Ethnie und Alter einen Einfluss auf (oder zumindest Zusammenhang mit) dem Depressions-Score hat.
+Stellen Sie mit ANOVA fest, welche der Faktoren Geschlecht, Ethnie und Alter einen Einfluss auf (oder zumindest Zusammenhang mit) dem Depressions-Score hat.
 
 ### Aufgabe 8: Weitere Kovariate
 

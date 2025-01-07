@@ -86,7 +86,7 @@ Um diese Plots zu erstellen, hatten wir folgende Daten:
 #### Platten-Scans
 
 Der Platten-Scanner hat Tabellen als Excel-Dateien ausgegeben. Hier ist ein Beispiel:
-[Excel-Datei vom Tecan-Scanner](data_on_git/tecan_scans.xslx)
+[Excel-Datei vom Tecan-Scanner](data_on_git/tecan_scans.xlsx)
 
 Wir haben ein Arbeitsblatt (*worksheet*) pro Messung. Darin finden sich zwei Blöcke
 mit Messwerten (für die beiden Wellenlängen), in denen die Werte so angeordnet sind,

@@ -55,6 +55,7 @@ Wintersemester 2024/25
   - [Lineare Regression](linreg.html)
   - [Hausaufgabe](hausaufgabe_bmi.html), fällig zum 17.12.
 - [Poisson-Verteilung](poisson.html)  
+- [Hinweise zu Quarto-Notebooks](standalone.html)
 - [Hausaufgabe über die Winterferien](HA_Winter.html)
 
 ## Musterlösungen zu den Hausaufgaben
