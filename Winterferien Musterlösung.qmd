@@ -1,0 +1,260 @@
+---
+title: "Winterferien Hausaufgaben"
+format: html
+embed-resources: true
+---
+
+## Aufgabe 1
+
+In dieser Aufgabe müssen wir die Dateien mit denen wir arbeiten werden herunterladen und in R einlesen.
+
+<https://wwwn.cdc.gov/nchs/nhanes/search/datapage.aspx?Component=Questionnaire&CycleBeginYear=2017> - hier in der Liste findet man die DPQ_J Datei mit den Ergebnissen der Umfrage.
+
+<https://wwwn.cdc.gov/nchs/nhanes/search/datapage.aspx?Component=Demographics&CycleBeginYear=2017> - hier ist die bekannte DEMO_J Datei aus den Vorlesungen.
+
+Als erstes laden wir alle Packages die wir brauchen werden:
+
+(falls ein Package nicht gefunden wird, überprüft ob es mit install.packages() runtergeladen wurde)
+
+```{r}
+library( tidyverse)
+library( haven)
+```
+
+Dann lesen wir die Dateien ein:
+
+(Wenn die Dateien in demselben Ordner wie das Projekt gespeichert sind, muss nur der Name der Datei in Anführungszeichen angegeben werden. Wenn die Datei sich z.B. in "Downloads" befindet, braucht man den ganzen Weg zum File damit R es finden kann)
+
+```{r}
+read_xpt("DPQ_J.xpt") -> DPQ_J
+read_xpt("DEMO_J.xpt") -> demo_j
+```
+
+Was haben wir für ein Dataset? Was ist das Format? Schauen wir uns die Depression-Score Tabelle an:
+
+```{r}
+head( DPQ_J, 10)
+colnames( DPQ_J)
+```
+
+Die erste Spalte enthält den Probanden-Nummer und die restlichen 10 Spalten die Punktzahl für einzelne Fragen. Die zehnte Frage wollen wir nicht mitzählen und entfernen sie mit select(). Um die Tabelle in die lange Form umzuwandeln benutzen wir pivot_longer(), cols gibt dabei an aus welchen Spalten die Werte entnommen werden und values_to/names_to benennen die neuen Spalten.
+
+```{r}
+DPQ_J |> 
+  select( -DPQ100) |> 
+  pivot_longer(
+    cols = 2:10,
+    names_to = "question",
+    values_to = "points"
+  ) -> dpq_scores_long
+
+```
+
+Als nächstes ersetzen wir alle Codes die größer wie 3 sind mit NA. NA hat eine interessante Eigenschaft: wenn man dann die Punkten für die einzelnen Probanden aufaddiert, bekommen die Probanden die die Fragen nicht vollständig beantwortet haben als Ergebnis auch NA.
+
+Solche Probanden können aus der Analyse einfach mit filter( !is.na()) ausgeschlossen werden.
+
+```{r}
+  dpq_scores_long |> 
+  mutate(points = ifelse( points > 3, NA, points)) |> 
+  group_by( SEQN) |> 
+  summarize( sum_points = sum( points)) |> 
+  filter( !is.na( sum_points)) -> dpq_scores
+```
+
+## Aufgabe 2
+
+In dieser Aufgabe wird die DHQ-9 Tabelle mit der DEMO_J Tabelle vereint.
+
+Wir prüfen die Spaltennamen in der DEMO_J Tabelle, schlagen im Codebuch nach und wählen die aus, die wir brauchen werden. (Nummer, Alter, etc.) <https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2017/DataFiles/DEMO_J.htm#DMDEDUC2>
+
+```{r}
+
+colnames( demo_j)
+demo_j |> 
+  select( SEQN, RIAGENDR, RIDAGEYR, DMDMARTL, RIDRETH3) -> demo_j_selected
+
+```
+
+Jetzt fügen wir die beiden Tabellen zusammen. Left_join behält alle Spalten aus der "linken" Tabelle, SEQN ist dabei der sogenannte Schlüssel der jede Spalte eindeutig identifiziert und in beiden Tabellen vorkommt.
+
+```{r}
+demo_j_selected |> 
+  left_join( dpq_scores, by = "SEQN") -> nhanes_merged
+```
+
+Dann umbenennen wir die Spalten. Dafür speichern wir die neuen Namen in einem Vektor ("new_names") und weisen die Namen den Spalten zu in der Reihenfolge in der sie vorkommen. Die nutzliche Funktion heißt names().
+
+```{r}
+new_names <- c( "respondent", "gender", "age", "marital", "ethnicity", "sum_points")
+names(nhanes_merged) <- new_names
+
+```
+
+Jetzt haben wir aberDie Begriffe die den Codes entsprechen fiden wir nach wie vor im Codebook.
+
+Um die Codes in brauchbare Begriffe umzuwandeln, benutzen wir case_when(). Diese Funktion ist if_else() ziemlich ähnlich, erlaubt aber mehrere Bedingungen anzuwenden. Wenn die Funktion mit mutate kombiniert wird, ersetzt sie in den Zeilen die die Bedingung erfüllen (z.B marital == 1) den Code mit dem Wert den wir angegeben haben.
+
+Zusätzlich entschlüssele ich auch die Spalten "gender" und "ethnicity".
+
+```{r}
+nhanes_merged |> 
+  filter( age >= 18) |> 
+  mutate( marital = 
+            case_when(
+              marital == 1 ~ "married",
+              marital == 2 ~ "widowed",
+              marital == 3 ~ "divorced",
+              marital == 4 ~ "separated",
+              marital == 5 ~ "never_married",
+              marital == 6 ~ "living_with_partner",
+              marital == 77 ~ "refused",
+              marital == 99 ~ "dont_know",
+              is.na(marital) ~ "missing"
+                      ),
+          
+          gender = case_when(
+            gender == 1 ~ "male",
+            gender == 2 ~ "female"),
+          
+          ethnicity = case_when(
+            ethnicity == 1 ~ "mexican",
+            ethnicity == 2 ~ "hispanic",
+            ethnicity == 3 ~ "nh_white",
+            ethnicity == 4 ~ "nh_black",
+            ethnicity == 6 ~ "nh_asian",
+            ethnicity == 7 ~ "other",
+            is.na(ethnicity) ~ "missing"
+            )
+          
+          ) -> nhanes_merged_tidy
+
+
+```
+
+## Aufgabe 3
+
+Berechnen wir die Mittelwerte der DHQ9-Punktsummen für Männer und Frauen:
+
+```{r}
+nhanes_merged_tidy |> 
+  filter( !is.na( sum_points)) |> 
+  group_by( gender) |> 
+  summarize( mean_score = mean( sum_points))
+```
+
+Führen wir ein ttest durch:
+
+```{r}
+nhanes_merged_tidy |> 
+  filter( !is.na( sum_points)) -> nhanes_merged_tidy
+
+ t.test( sum_points ~ gender, nhanes_merged_tidy)
+```
+
+Der p-Wert liegt in der Größenordnung von 10\^(-15). Der 95% Konfidenzintervall überlappt die Null nicht, das heißt auf dem 0.95 Konfidenzniveau sind die mittleren Scores von Männern und Frauen nicht gleich.
+
+Führen wir jetzt den ttest einzeln für die Männer und für die Frauen durch, um 95% Konfidenzinterval für die beiden Mittelwerte zu erhalten. Die Ergebnisse habe ich als zwei Tabellen gespeichert.
+
+```{r}
+  
+nhanes_merged_tidy |> 
+  filter( gender == "female")-> nhanes_female
+
+nhanes_merged_tidy|> 
+  filter( gender == "male") -> nhanes_male
+
+  broom::tidy(t.test(nhanes_female$sum_points)) -> female_t
+  broom::tidy(t.test(nhanes_male$sum_points)) -> male_t
+  
+ 
+```
+
+Dann habe ich eine neue Spalte mit Geschlecht an jede Tabelle angehängt. Bind_rows erlaubt dann die beiden Tabellen zusammenzufügen. Für den Plot braucht man aus der vereinten Tabelle nur Geschlecht, die Grenzen von Konfidenzintervallen und den Mittelwert.
+
+```{r}
+  female_t |> 
+    mutate(gender = "female") -> female_t
+  male_t |> 
+    mutate(gender = "male") -> male_t
+  
+bind_rows( female_t, male_t) |> 
+  select( gender, conf.low, conf.high, estimate)-> mean_confint
+```
+
+So sieht das Histogramm ohne Aufteilung nach Geschlecht aus:
+
+```{r}
+ 
+  hist(nhanes_merged_tidy$sum_points, breaks = seq(0,30, 1))
+    
+
+```
+
+Hier vereine ich die Tabelle nhanes_merged die einzelne Scores enthält mit den Ergebnissen von ttest.
+
+Um den Plot nach Geschlecht aufzuteilen, benutzt man facet_grid(). Mit geom_vline habe ich die Konfidenzintervale eingezeichnet.
+
+```{r}
+  nhanes_merged_tidy |> 
+    left_join( mean_confint) |> 
+    ggplot() +
+    geom_histogram(aes( x = sum_points, fill = gender), col = "black", binwidth = 1) +
+    geom_vline( aes( xintercept = estimate), linewidth = 0.5)+
+    geom_vline( aes( xintercept = conf.high), linewidth = 0.1, col = "green") +
+    geom_vline( aes( xintercept = conf.low), linewidth = 0.1, col = "green") +
+    facet_grid( rows = vars(gender))
+```
+
+## Aufgabe 4
+
+Der Anteil von Probanden mit Depression lässt sich am besten mit mean() berechnen.
+
+```{r}
+  nhanes_merged_tidy |>
+    group_by( gender, marital) |>
+    summarize( prop_over10 = mean( sum_points > 10))
+ 
+    
+```
+
+Für den folgenden binom.test() brauchen wir als Argument nicht die Proportion, sondern Zahl der Probanden mit Depression und Gesamtzahl der Probanden in jeder Gruppe. Diese Werte bekommt man mit sum() und n().
+
+```{r}
+ 
+  nhanes_merged_tidy |>
+    group_by( gender, marital) |>
+    summarize( n = n(), over10 = sum( sum_points > 10)) -> nhanes_merged_tidy
+  
+```
+
+Funktion do() erlaubt binom.test() auf jede der Gruppen in der Tabelle anzuwenden. Hier sind auch alternative Lösungen möglich.
+
+```{r}
+data <- nhanes_merged_tidy |>  
+      group_by(gender, marital) |> 
+      do( broom::tidy( binom.test(.$over10, .$n, alternative = "two.sided"))) 
+```
+
+Zum Plot:
+
+-   mit aes() gibt man an, wo ggplot informationen für y and x Werte entnehmen soll. Sowohl für geom_col und geom_errorbar ist x der Familienstand, aber y-Werte sind unterschiedlich.
+
+-   Probanden mit Familienstand "refused" wurden entfernt. Den Grund dafür kann man finden, indem man sich die ursprüngliche nhanes_merged_tidy Tabelle anschaut.
+
+-   Die theme() Funktion wurde verwendet um die Beschriftungen schöner zu machen. Mit axis.text.x = element_text(angle = 45, vjust = 0.6) vermeidet man, dass die x-Achse Beschriftungen überlappen.
+
+```{r}
+ data |> 
+       filter( marital != "refused") |> 
+       mutate( marital = fct_inorder( marital)) |> 
+       ggplot() +
+       geom_col( aes( x = marital, y = estimate, fill = marital ), width = 0.6, col = "black") +
+       geom_errorbar( aes(x = marital, ymin=conf.low, ymax=conf.high), width=.4) +
+       facet_grid( rows = vars(gender)) +
+       xlab("Marital status") + ylab("depression score > 10" ) +
+       
+   theme(axis.title = element_text(size = 14), axis.text= element_text(size = 10)) +
+       theme(axis.title.y = element_text(margin = margin(r = 0.25, unit = "in")))+
+       theme(axis.text.x = element_text(angle = 45, vjust = 0.6)) 
+```
