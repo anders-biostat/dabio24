@@ -60,12 +60,12 @@ Tipp: Sie brauchen kein `summerize`. Verwenden Sie `group_by` und danach ein `mu
 
 Ergänzen Sie dann die Spalten für Organ, Zeitpunkt und Replikat, indem Sie die Probentabelle per Table-Join anfügen.
 
-[Hier](data_on_git/Ensembl_102_GRCm38.p6_Gene_names.tsv) finden Sie eine Tabelle, die die Gen-IDs den Gen-Symbolen (Gen-Namen) zuordnet. Fügen Sie auch diese Tabelle hinzu.
+[Hier](data_on_git/Ensembl_102_GRCm38.p6_Gene_names_2.tsv) finden Sie eine Tabelle, die die Gen-IDs den Gen-Symbolen (Gen-Namen) zuordnet. Fügen Sie auch diese Tabelle hinzu.
 
 ```{r echo=FALSE,message=FALSE}
 long_tbl %>%
 left_join( sample_table ) %>%
-left_join( read_tsv( "data_on_git/Ensembl_102_GRCm38.p6_Gene_names.tsv" ), by="gene_id" ) -> long_tbl
+left_join( read_tsv( "data_on_git/Ensembl_102_GRCm38.p6_Gene_names_2.tsv" ), by="gene_id" ) -> long_tbl
 ```
 
 ### Schritt 4: Plotten

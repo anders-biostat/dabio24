@@ -199,4 +199,4 @@ Außer Sequenzierdaten und Meßwerten gibt es auch andere Datentypen, z.B. Mikro
 
 Zum *Grundwerkzeug* gehört, mit Datentabellen zu arbeiten. Daher lernen wir R.
 
-Nächstes Kapitel: [Erste Schritte mit R](erste_schritte)
+Nächstes Kapitel: [Erste Schritte mit R](erste_schritte.html)
