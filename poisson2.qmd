@@ -1,0 +1,166 @@
+---
+title: "Poisson-Rauschen"
+---
+
+In der Analyse von RNA-Seq-Daten arbeiten wird mit Count-Matrizen. Die "Messwerte" sind keine Messungen (measurements), sondern Anzahlen (counts): Wie viele Reads wurden in Probe X gezqhlt, die von Gen Y stammten?
+
+Wann immer wir Zähl-Daten (count values) haben, mússen wir uns mit der Besonderheit von Zähl-Statistiken beschaftigen.
+
+### Wiederholung: Binomialverteilung
+
+**Beispiel:** Wir möchten wissen, ob es der Anteil Blauäugiger in der Bevölkerung Manngheims anders ist als in Heidelberg.
+Wir wählen zufällg je 30 Mannheimer und Heidelberger aus: 13 der 30 Mannheimer und 9 der 30 Heidelberger haben blaue Augen.
+
+Vier-Felder-Tafel:
+
+```{r}
+m <- rbind( c( 13, 17 ), c( 9, 21 ) )
+dimnames(m) <- list( c( "Mannheim", "Heidelberg" ), c( "blau", "nicht-blau" ) )
+m
+```
+
+Ist das ein signifikanter Unterschied?
+
+```{r}
+fisher.test(m)
+```
+
+Nein.
+
+Um uns das plausibel zu machen, modellieren wir das Problem: Wenn der Anteil Blauäuigiger in Deutschland 30% beträgt, und wir 30 Personen zufällig auswählen, wie viele Blauäugige finden wir?
+
+Wir sehen uns die Binomial-Verteilung für $n=30$ und $p=0.3$ an:
+
+```{r}
+plot( 0:20, dbinom( 0:20, 30, .3 ), type="h" )
+```
+
+### Poisson-Limit der Binomialverteilung
+
+Die Binomialverteilung hat zwei Parameter: $n$ und $p$.
+
+Für sehr kleines $p$ hängt die Verteilung nur vom Produkt $\lambda=np$ ab.
+
+Beispiel: Die Binomialverteilungen zu $n=10\,000$, $p=0.001$ und $n=100\,000$, $p=0.0001$ sehen praktisch gleich aus:
+
+```{r message=FALSE}
+library(tidyverse)
+
+tibble( k=0:25 ) %>%
+mutate(
+  prob1 = dbinom( k,  1000, .01 ),
+  prob2 = dbinom( k, 10000, .001 ) ) %>%
+ggplot() +
+  geom_col( aes( x=k, y=prob1 ), fill="orange", alpha=.5 ) +
+  geom_col( aes( x=k, y=prob2 ), fill="steelblue", alpha=.5 ) 
+```
+
+Allgemein: Zwei Binomialverteilungen $\text{Bi}(n_1,p_1)$ und $\text{Bi}(n_2,p_2)$ mit demselben
+Erwartungswert $\mu = n_1p_1 = n_2p_2$ sehen fast gleich aus, wenn $p_1\ll 1$ und $p_1\ll 2$.
+
+Für einen vorgegebenen Erwartungswert $\mu$ nähern sich die Binomialverteilungen $\text{Bi}(n,p)$ mit $p=\mu/n$ für $n\to\infty$ einer Grenzverteilung an, der *Poisson-Verteilung* $\text{Pois}(\mu)$, mit der Wahrscheinlichkeitsverteilung
+$$ f_\text{Pois}(k|\mu) = e^{-\mu}\frac{\mu^k}{k!}. $$
+
+Eine explizite Rechnung ergibt dies als den Grenzwert für $\n\to\infty$ für $f_\text{Bi}(k|n,p)=\binom{n}{p}p^k(1-p)^{n-k}$ mit $p=\frac{\mu}{n}$ ist.
+
+### Poissonverteilung als exakte Verteilung
+
+Auf einen gepflasterten Platz fällt ein kurzer Regenschauer. Die Intensitqt ist so, dass pro Quadratmeter im Mittel 40 Tropfen fallen. Wir betrachten einen Pflasterstein mit 0.25 m² Fläche. Wir erwaten also, 10 Tropfen vorzufinden. Wie wahrscheinlich ist es, dass wir auf dem Stein $k$ Tropfen zählen?
+
+Antwort: Die Tropfenzahl ist Poisson-verteilt mit $\mu=10$.
+
+```{r}
+plot( 0:20, dpois( 0:20, 10 ), type="h" )
+```
+Vergleiche: Wenn wir insgesamt 1000 Pflastersteine haben, die somit $n=10000$ Tropfen aufsammeln, hätten wir für die Tropfen auf einem Stein eine Binomialverteilung $\text{Bi}(10000,.001)$, die fast gleich der Poissonverteilung ist. 
+
+Diesmal ist aber die Poissonverteilung nicht nur Näherung, sondern exakt, den $n$ ist nicht vorgegeben.
+
+### Standardabweichung der Poissonverteilung
+
+Die Standardabweichung von $\text{Bi}(n,p)$ ist $\sigma=\sqrt{np(1-p)}$. Für $p\ll 1$ und $\mu=np$ ist das $\sigma\approx\sqrt{\mu}$.
+
+Für die Poissonverteilung gilt das exakt:
+
+<div class=imp>
+Eine Poissonverteilung mit Erwartungswert $\mu$ hat Varianz $v=\mu$ und STandardabweichung $\sigma=\sqrt{\mu}$.
+</div>
+
+**Beispiel**: Mit einem Zählgitter zählen wir die Anzahl Leukozyten in einem Tropfen verdünnten Blutes. Wir zählen 20 Zellen innerhalb der Zählkammer. Dann untersuchen wir eine zweite Probe und zählen 25 Tropfen. Dürfen wir folgern, dass die Leukozyten-Konzentration in der zweiten Probe größer ist?
+
+Für einen Erwartungswert von 20 beträgt die Poisson-Standardabweichung $\sqrt{20}=4.5$ und für haben wir $\sqrt{25}=5$. Der Standardfehler unser Zahlen ist also nicht kleiner als die Differenz. 
+
+Wenn wir also die Konzentration genau genug bestimmen möchten, so dass wir einen Unterschied von 25% zuverlässig erkennen können, müssen wir deutlich mehr Zellen zählen.
+
+### Genauigkeit von Konzentrationen
+
+Für eine STudie zur Wirksamkeit eines Herbizids soll für eine bestimmte Unkrautspezies die Anzahl der Pflanzen pro Quadratmeter besttimmt werden. Dazu werden an 20 Stellen im Acker jeweils ein Quadratmeter abgesteckt und die Pflanzen gezählt. Insgesamt haben wir (in allen 20 Quadraten zusammen) 237 Pflanzen gezählt. Das ergibt 237/20 = 11.8 Pflanzen pro m². Wie genau ist diese Angabe?
+
+Die Standardabweichung unseres Zählergebnisses ist $\sqrt{237}=15.4$. Das  ist Standardfehler von $15.4/20=0.8$ Pflanzen pro m².
+
+Die relative Genauigkeit unseres Ergebnisses ist also $0.8/11.8=7\%$.
+
+Wenn wir die Genauigkeit auf verbessern möchten, z.B., um den Faktor 3, also auf 2.3%, dann müssen wir $3^2=9$ mal so viele Pflanzen zählen, also statt 20 Quadraten 180 QUadrate auszählen.
+
+Es gilt also (mal wieder): Um die Genauigkeit um den Faktor $s$ zu verbessern, muss man die Stichprobe um den Faktor $s^2$ vergrößern.
+
+Besonderheit beim Zählen: Wir können die Genauigkeit direkt aus der gezählten Anzahl ablesen: Wir haben 237 Pflanzen gezählt und konnten daher die Anzahl pro m² mit einer Genauigkeit von $1/\sqrt{237}=7\%$ bestimmen.
+
+<div class="imp">
+Eine Konzentration, die durch Abzählen von $k$ Objekten ermittelt wurde hat eine Genauigkeit (relative Standardabweichung) von $1/\sqrt{k}$.
+</div>
+
+### Anwendung auf RNA-Seq
+
+Beispiel 1: In einer Probe haben wir für Gen A 20 Reads gezählt und für Gen B 25 Reads. Können wir sagen, dass Gen B stärker exprimiert ist?
+
+Nein.
+
+Denn die Genauigkeit der Anzahlen beträgt nur etwa $1/\sqrt{20}=22\%$ bzw. $1/\sqrt{20}=20\%$ und der Unterschied ist auch $25\%$ mehr (oder $20\%$ weniger).
+Ein Vergleich, z.B. durch einen Hypothesentest auf Gleichheit von Anteilen ($\chi^2$-Test mit `prop.test`), wird also nicht signifikant sein.
+
+Beispiel 2: In einem Experiment soll untersucht werden, welche Gene auf einen bestimmten Stimulus reagieren. Das Gen A ist von besonderem Interesse. Typischerweise hat Gen A eine Expressionsstärke von etwa 50 CPM. Wie tief muss sequenziert werden, dass man die Epxressionsstärke von Gen A auf 10% genau bestimmen kann?
+
+Antwort: Um 10% Genauigkeit zu erhalten, muss man für das Gen 100 Reads zählen (denn $1/\sqrt{100}=10\%$). Wenn wir füë das Gen 50 CPM, also 50 Reads pro 1 Million Reads ingesamt, erwarten, sollten wir mindestens 2 Millionen Reads pro Probe anpeilen.
+
+Beispiel 3: Wir möchten wissen, ob die Expressionsstärke von Gen A sich unterscheidet zwischen Hautproben von gesunden und von an Schuppenflechte erkrankten Probanden.
+
+Wir haben folgende Daten:
+
+```{r}
+set.seed( 13245768 )
+
+tibble(
+  group = rep( c( "healthy", "psoriatic" ), each=8 ),
+  read_count_total = round( 10^rnorm( 16, 6.2, .3 ) )
+) %>%
+mutate(
+  count_for_gene_A = rbinom( 16, read_count_total,
+      rnorm( 16, 1e-4, 1e-5 ) * ifelse( group=="psoriasis", 2, 1 ) ) ) -> tbl
+
+tbl %>% mutate( log2cpm = log2( count_for_gene_A / read_count_total * 1e6 )  ) -> tbl
+
+tbl
+```
+
+Die Genauigkeit der CPM-Werte beträgt also um 10% da die Zählwerte um 100 liegen.
+
+Der Effekt von Psoriasis wurde so simuliert, dass die Genexpression verdoppelt wird.
+
+Können wir differentielle Genexpression nachweisen? Wir machen einen t-Test:
+
+```{r}
+t.test( log2cpm ~ group, tbl )
+```
+
+Warum hat die Genauigkeit von 10% nicht gereicht um eine Verdopplung (Änderung um 100%) zu erkennen?
+
+Weil 10% nur die *technische* Variabilität ist. Die biologische Variabilität (Unterschiede zwischen Probanden in derselben Gruppe) war viel höher.
+
+Also: Bei schwach exprimierten Genen limitiert das Poisson-Rauschen (technische Variabilität) die statistische Power, bei stark exprimierten Genen ist die biologische Variabilität der limitierende Faktor.
+
+### Zusammenfassung
+
+Wann immer man in einer Stichprobe zählt, liegt Poisson-Rauschen vor, dass die Genauigkeit des Ergebnisses beschränkt.
+
+Wenn man $k$ Objekte in einem Volumen $V$ zählt (dass eine Probe darstellt, die aus einer viel größeren gesamtheit genommen wurde) und mann dann eine Konzentration $c=k/V$ folgert, dann hat dieses Ergebnis eine *relative* Ungenauigkeit von $1/\sqrt{k}$. Das bedeutet, dass das *Verhältnis* von ermitteltem Wert zu wahrem Wert mit einer Standardabweichung von $1/\sqrt{k}$ um 1 "schwankt".

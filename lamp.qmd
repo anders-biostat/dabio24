@@ -1,0 +1,147 @@
+---
+title: "Beispie: LAMP-Test"
+---
+
+In dieser Beispiel-Anal;yse sehen wir uns noch einmal die Daten zu dem LAMP-Test an,
+die in der [ersten Vorlesung](einleitung.html) beschrieben wurden.
+
+### Einlesen einer Excel-Datei
+
+Zunächst lesen wir die erste Platte vom ersten Worksheet der [Excel-Tabelle](data_on_git/tecan_scans.xlsx)
+mit den Plattenscans ein. Wir geben hier das Rechteck aus Zellen an, indem die Tabelle liegt: von Zelle A8 bis Zelle M16.
+
+```{r}
+suppressPackageStartupMessages({
+  library( tidyverse )
+  library( readxl ) })    # readxl, um Excel-Daten laden zu können
+
+read_excel( "~/Downloads/tecan_scans.xlsx", range="A8:M16" )
+```
+
+Wir machen die Tabelle "lang":
+
+```{r}
+read_excel( "~/Downloads/tecan_scans.xlsx", range="A8:M16" ) %>%
+pivot_longer( cols=-"*", names_to = "plate_col" , values_to = "abs434" ) %>%
+rename( "plate_row"="*" ) -> tbl434
+
+tbl434
+```
+
+Hier haben wir nun Tabellenzeilen für Plattenzeile und Plattenspalte. Die Spalte mit den Werten heist nun "abs434" für "Absorption bei 434 nm".
+
+Dasselbe für den Scan bei 560 nm, der weiter unten im Excel-Worksheet (in Zeilen 22 bis 30) steht.
+
+```{r}
+read_excel( "~/Downloads/tecan_scans.xlsx", range="A22:M30" ) %>%
+pivot_longer( cols=-"*", names_to = "plate_col" , values_to = "abs560" ) %>%
+rename( "plate_row"="*" ) -> tbl560
+
+tbl560
+```
+
+### Joining
+
+Wir fügen die beiden Tabellen zusammen
+
+```{r}
+full_join( tbl434, tbl560, by=c( "plate_row", "plate_col" ) )     # ("left_join" geht auch)
+```
+
+Mit `by` haben wir angegeben, an welchen Spalten der Join erkennt, welche Zeilen zusammengefügt werden sollen.
+
+### Die übrigen Worksheets
+
+Die was das erste Sheet, beschriftet mit "20 min". Um ein anderes Sheet, z.B. das für Inkubationszeit "25 min" zu erhalten,
+müssen wir ein `sheet`-Argument mit angeben:
+
+```{r}
+read_excel( "~/Downloads/tecan_scans.xlsx", range="A8:M16", sheet="25 min" )
+```
+
+Wenn wir die Inkubationszeit in Minuten haben (z.B. `minutes=25`), können wir den Sheet-Namen mit `str_c` zusammensetzen:
+
+```{r}
+minutes <- 25
+sheet <- str_c( minutes, " min" )
+
+sheet
+```
+
+Wir bilden aus den Code-Zeilen, die wir bisher haben, eine Funktion:
+
+```{r}
+load_sheet <- function( minutes ) {
+ 
+  sheet <- str_c( minutes, " min" )
+   
+  read_excel( "~/Downloads/tecan_scans.xlsx", range="A8:M16", sheet=sheet ) %>%
+  pivot_longer( cols=-"*", names_to = "plate_col" , values_to = "abs434" ) %>%
+  rename( "plate_row"="*" ) -> tbl434
+  
+  read_excel( "~/Downloads/tecan_scans.xlsx", range="A22:M30", sheet=sheet ) %>%
+  pivot_longer( cols=-"*", names_to = "plate_col" , values_to = "abs560" ) %>%
+  rename( "plate_row"="*" ) -> tbl560
+  
+  full_join( tbl434, tbl560, by=c( "plate_row", "plate_col" ) ) %>%
+  mutate( time = minutes )
+
+}
+```
+
+Diese Funktion können wir nun aufrufen, mit Angabe einer Inkubationszeit, und sie lädt das zugehörige Worksheet, und baut die Tabelle zusammen.
+
+```{r}
+load_sheet( 30 )
+```
+
+In der Funktion haben wir dem Join eine Code-Zeile angefügt, der die Minuten-Zahl in einer neuen Spalte `time` einträgt.
+
+### Alle Sheets laden
+
+Damit können wir nun alle Sheets laden und mit `bind_rows` zu eienr langen Tabelle zusammen fügen:
+
+```{r}
+
+bind_rows(
+  load_sheet( 20 ),
+  load_sheet( 25 ),
+  load_sheet( 30 ),
+  load_sheet( 35 ),
+  load_sheet( 40 ),
+  load_sheet( 45 )
+) -> lamp_table
+
+lamp_table
+```
+
+WIr können auch 
+
+```{r}
+seq( 20, 45, 5 )
+```
+
+verwenden, um alle Zeiten zu erzeugen, und dann die Funktion für jede Zeit aufrufen. Wenn man das mit `map_dfr` macht, werden die Ergebnisse wie zuvor zu einer langen Tabelle zusammengestellt:
+
+```{r}
+map_dfr( seq( 20, 45, 5 ), load_sheet ) -> lamp_table
+```
+
+### Plot
+
+Als Vorbereitung zum Plotten fügen wir eine Spalte `well` hinzu, die Platten-Zeile und -Spalte zusammenfügt:
+
+```{r}
+lamp_table %>%
+mutate( well = str_c( plate_row, plate_col ) )
+```
+
+Nun können wir plotten. Jedes Well wird durch eine Linie dargestellt:
+
+```{r}
+lamp_table %>%
+mutate( well = str_c( plate_row, plate_col ) ) %>%
+ggplot +
+  geom_line( aes( x=time, y=abs434-abs560, group=well ) )
+
+```
