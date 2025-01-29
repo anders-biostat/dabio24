@@ -54,9 +54,19 @@ Wintersemester 2024/25
   - [ANOVA](anova.html)
   - [Lineare Regression](linreg.html)
   - [Hausaufgabe](hausaufgabe_bmi.html), fällig zum 17.12.
-- [Poisson-Verteilung](poisson.html)  
+- [Poisson-Verteilung 1](poisson.html)  
 - [Hinweise zu Quarto-Notebooks](standalone.html)
 - [Hausaufgabe über die Winterferien](HA_Winter.html)
+- [Beispiel-Analyse: LAMP-Test](lamp.html)
+- High-throughput sequencing
+  - [Übersicht](seq_intro.html)
+  - [Präprozessierung von RNA-Seq-Daten](alignment.html)
+  - [Hausaufgabe zu RNA-Seq I](HA_rnaseq_1.html)
+  - [Erster Blick auf die mausdaten](https://papagei.bioquant.uni-heidelberg.de/simon/dabio23/mouse_first_look.html) (übernommen vom Vorjahr)
+  - [Differentielle Gen-Expression](https://papagei.bioquant.uni-heidelberg.de/simon/dabio23/deseq.html)  (übernommen vom Vorjahr)
+- [Link zur Vorlesungs-Evaluation](https://uni-heidelberg.evasys.de/evasys/online.php?pswd=FY2S5)
+- [Hausaufgabe: "Killing-Assay"](killing.html) (Abgabe bis 27.1.25)
+- [Poisson-Verteilung 2](poisson2.html)  
 
 ## Musterlösungen zu den Hausaufgaben
 

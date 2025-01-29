@@ -26,8 +26,8 @@ Dann lesen wir die Dateien ein:
 (Wenn die Dateien in demselben Ordner wie das Projekt gespeichert sind, muss nur der Name der Datei in Anführungszeichen angegeben werden. Wenn die Datei sich z.B. in "Downloads" befindet, braucht man den ganzen Weg zum File damit R es finden kann)
 
 ```{r}
-read_xpt("DPQ_J.xpt") -> DPQ_J
-read_xpt("DEMO_J.xpt") -> demo_j
+read_xpt("~/Downloads/DPQ_J.xpt") -> DPQ_J
+read_xpt("~/Downloads/DEMO_J.XPT") -> demo_j
 ```
 
 Was haben wir für ein Dataset? Was ist das Format? Schauen wir uns die Depression-Score Tabelle an:
