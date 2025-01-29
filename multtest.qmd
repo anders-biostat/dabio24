@@ -104,6 +104,6 @@ Die o.g. Überlegung zeigt, dass dies naiv ist.
 
 J. Ioannidis fasste dies 2005 zusammen im viel diskutierten [Artikel](https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.0020124) "Why Most Published Research Findings Are False".
 
-Die American Statistical Association veröffentlichte in 2016 ein "Statement on Statistical Significance and P-Values" ([Link](https://amstat.tandfonline.com/doi/full/10.1080/00031305.2016.1154108#d1e385), Statement beginnt nach Supplement zur Einleitung). Der zugehörige Artikel verweist auf eine Vielzahl von Arbeiten zum Thema.
+Die American Statistical Association veröffentlichte in 2016 ein "Statement on Statistical Significance and P-Values" ([Link](https://doi.org/10.1080/00031305.2016.1154108), Statement beginnt nach Supplement zur Einleitung). Der zugehörige Artikel verweist auf eine Vielzahl von Arbeiten zum Thema.
 
 xkcd ist, wie immer, relevant: [#1478](https://xkcd.com/1478/), [#882](https://xkcd.com/882/)
