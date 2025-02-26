@@ -1,1 +1,1 @@
-[Webseiten hier]https://papagei.bioquant.uni-heidelberg.de/simon/dabio24/
+Webseiten hier: https://papagei.bioquant.uni-heidelberg.de/simon/dabio24/
